@@ -1,0 +1,72 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  background: rgba(0, 0, 0, 0.45);
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.guest-modal {
+  width: 360px;
+
+  background: white;
+
+  border-radius: 20px;
+
+  padding: 24px;
+
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+
+.guest-modal h2 {
+  text-align: center;
+  color: #6b8afd;
+}
+
+.guest-display {
+  height: 70px;
+
+  margin: 20px 0;
+
+  border: 2px solid #6b8afd;
+
+  border-radius: 12px;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  font-size: 2rem;
+  font-weight: bold;
+}
+
+.keyboard {
+  display: grid;
+
+  grid-template-columns: repeat(3, 1fr);
+
+  gap: 10px;
+}
+
+.keyboard button {
+  height: 60px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #6b8afd;
+
+  color: white;
+
+  font-size: 1.2rem;
+
+  cursor: pointer;
+}
+
+.keyboard button:hover {
+  opacity: 0.9;
+}

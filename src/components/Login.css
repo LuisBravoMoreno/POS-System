@@ -1,0 +1,91 @@
+/* STYLE KEYBOARD*/
+* {
+  box-sizing: border-box;
+}
+
+.login-page {
+  min-height: 100vh;
+   background:
+  linear-gradient(
+    135deg,
+    #F8FAFC,
+    #E2E8F0
+  );
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.login-card {
+  width: 360px;
+  background: white;
+
+  border-radius: 25px;
+  padding: 40px 30px;
+
+  text-align: center;
+
+  box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+}
+
+.login-card h3 {
+  margin-bottom: 20px;
+  color: #666;
+  font-weight: 500;
+}
+
+.pin-display {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+
+  font-size: 24px;
+  margin-bottom: 30px;
+  color: #ddd;
+}
+
+.keypad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+.keypad button {
+  height: 70px;
+
+  border: none;
+  border-radius: 18px;
+
+  background: white;
+
+  font-size: 28px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+
+  transition: 0.2s;
+}
+
+.keypad button:hover {
+  transform: translateY(-2px);
+}
+
+.delete-btn {
+  color: #0F172A;
+}
+
+.login-btn {
+  background: #2563EB !important;
+  color: white;
+}
+
+.footer-system {
+  margin-top: 25px;
+  color: #666;
+  font-size: 15px;
+  font-weight: 400;
+  /*cursor: pointer;*/
+}

@@ -1,0 +1,13 @@
+.company-banner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background-color: #000;
+}
+
+.banner-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 12px;
+}

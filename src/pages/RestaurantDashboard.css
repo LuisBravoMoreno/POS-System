@@ -1,0 +1,48 @@
+.dashboard {
+  min-height: 100vh;
+  background: #ECEFF3; /* mismo estilo de fondo */
+  padding: 30px;
+}
+
+.dashboard-title {
+  text-align: center;
+  color: #0F172A;
+  margin-bottom: 30px;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.dashboard-container {
+  display: flex;
+  min-height: 100vh;
+
+  background: #ECEFF3;
+}
+
+/* ===========================
+   CONTENT
+=========================== */
+
+.dashboard-main {
+  flex: 1;
+
+  padding: 40px;
+}
+
+.page-title {
+  color: #0F172A;
+
+  font-size: 2rem;
+
+  margin-bottom: 40px;
+}
+
+.tables-container {
+  display: grid;
+
+  grid-template-columns: repeat(5, 140px);
+
+  gap: 40px;
+
+  justify-content: center;
+}

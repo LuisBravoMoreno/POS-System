@@ -1,0 +1,42 @@
+
+.sidebar {
+  width: 250px;
+
+  background: white;
+
+  padding: 25px;
+
+  border-right: 1px solid #E2E8F0;
+}
+
+.sidebar-menu {
+  display: flex;
+  flex-direction: column;
+
+  gap: 15px;
+}
+
+.sidebar-menu button {
+  border: none;
+
+  background: transparent;
+
+  text-align: left;
+
+  font-size: 1rem;
+
+  padding: 12px;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  color: #475569;
+
+  transition: 0.2s;
+}
+
+.sidebar-menu button:hover {
+  background: #2563EB;
+  color: white;
+}
