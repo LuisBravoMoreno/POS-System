@@ -178,6 +178,7 @@
 ========================= */
 
 .menu-main {
+  position: relative;
   flex: 1;
 
   min-width: 0;
@@ -370,4 +371,267 @@
 
 .guest-row:hover {
   background: #eef3fc;
+}
+/* =========================
+   CATEGORY PRODUCT SCREEN
+========================= */
+
+.category-title {
+  margin: 0 0 25px 0;
+
+  color: #17233d;
+
+  font-size: 38px;
+  font-weight: 700;
+
+  text-transform: uppercase;
+}
+
+
+/* =========================
+   GUEST SELECTOR
+========================= */
+
+.guest-selector-container {
+  margin-bottom: 35px;
+}
+
+.guest-selector-title {
+  display: flex;
+  align-items: center;
+
+  gap: 8px;
+
+  margin-bottom: 12px;
+
+  color: #596579;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.guest-selector {
+  display: flex;
+  flex-wrap: wrap;
+
+  gap: 10px;
+}
+
+.guest-selector-button {
+  width: 45px;
+  height: 45px;
+
+  border: 1px solid #d3dceb;
+  border-radius: 10px;
+
+  background: white;
+
+  color: #17233d;
+
+  font-size: 15px;
+  font-weight: 700;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.guest-selector-button:hover {
+  background: #e7edfa;
+}
+
+.guest-selector-button.selected {
+  background: #667fe5;
+
+  color: white;
+
+  border-color: #667fe5;
+
+  transform: translateY(-1px);
+}
+
+
+/* =========================
+   PRODUCTS GRID
+========================= */
+
+.products-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(4, minmax(170px, 220px));
+
+  gap: 25px;
+}
+
+
+/* =========================
+   PRODUCT CARD
+========================= */
+
+.product-card {
+  min-height: 115px;
+
+  display: flex;
+  flex-direction: column;
+
+  align-items: center;
+  justify-content: center;
+
+  gap: 12px;
+
+  padding: 15px;
+
+  border: none;
+  border-radius: 16px;
+
+  background: white;
+
+  color: #17233d;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 7px 20px rgba(23, 35, 61, 0.08);
+
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    background 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+
+  box-shadow:
+    0 10px 24px rgba(23, 35, 61, 0.12);
+}
+
+.product-card:active {
+  transform: scale(0.98);
+}
+
+
+/* PRODUCT NAME */
+
+.product-name {
+  font-size: 16px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+
+/* PRODUCT PRICE */
+
+.product-price {
+  color: #5878df;
+
+  font-size: 16px;
+  font-weight: 700;
+}
+
+
+/* =========================
+   NO GUEST SELECTED
+========================= */
+
+.product-disabled {
+  opacity: 0.55;
+}
+
+
+/* =========================
+   BACK TO CATEGORIES
+========================= */
+
+.categories-back-button {
+  position: absolute;
+
+  right: 210px;
+  bottom: 30px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-width: 150px;
+
+  padding: 14px 24px;
+
+  border: 1px solid #667fe5;
+  border-radius: 12px;
+
+  background: white;
+
+  color: #5878df;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.categories-back-button:hover {
+  background: #eef2ff;
+}
+
+
+/* =========================
+   GUEST CHECK ITEMS
+========================= */
+
+.guest-row-selected {
+  background: #e8edff;
+
+  color: #4566d8;
+}
+
+.guest-items {
+  padding: 4px 8px 8px 18px;
+
+  background: #fafbfe;
+}
+
+.guest-item {
+  display: flex;
+
+  justify-content: space-between;
+  align-items: flex-start;
+
+  gap: 8px;
+
+  padding: 5px 0;
+
+  color: #657086;
+
+  font-size: 11px;
+}
+
+.guest-item span:first-child {
+  flex: 1;
+}
+
+.guest-item span:last-child {
+  white-space: nowrap;
+
+  font-weight: 600;
+}
+
+
+/* =========================
+   EMPTY CATEGORY
+========================= */
+
+.empty-category {
+  margin-top: 35px;
+
+  color: #8a93a3;
+
+  font-size: 15px;
 }
