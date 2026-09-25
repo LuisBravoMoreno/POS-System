@@ -4,10 +4,11 @@
 
 .menu-container {
   display: flex;
-  width: 100%;
-  min-height: 100vh;
 
-  background: #f4f7fc;
+  width: 100%;
+  height: 100vh;
+
+  overflow: hidden;
 }
 
 
@@ -16,19 +17,23 @@
 ========================= */
 
 .menu-sidebar {
-  width: 340px;
-  min-height: 100vh;
-
-  flex-shrink: 0;
-
-  background: #ffffff;
+  width: 300px;
+  min-width: 220px;
+  height: 100vh;
 
   display: flex;
   flex-direction: column;
 
-  position: relative;
+  background: white;
 
-  border-right: 1px solid #e5e7eb;
+  overflow: hidden;
+}
+/* =========================
+   FIXED TOP SECTION
+========================= */
+
+.sidebar-top {
+  flex-shrink: 0;
 }
 
 
@@ -41,7 +46,7 @@
   justify-content: center;
 
   margin-top: 5px;
-  margin-bottom: 20px;
+  margin-bottom: 5px;
 }
 
 
@@ -50,27 +55,21 @@
 ========================= */
 
 .order-info {
-  width: 82%;
+  width: 100%;
   margin: 0 auto;
 }
 
 
 /* Check + Bill Icon */
-
 .check-header {
   display: flex;
   align-items: center;
+  gap: 10px;
 
-  gap: 7px;
+  padding: 10px 15px;
 
-  font-size: 16px;
+  font-size: 20px;
   font-weight: 600;
-
-  color: #17233d;
-
-  padding-bottom: 8px;
-
-  border-bottom: 1px dashed #b8bec9;
 }
 
 
@@ -89,10 +88,10 @@
   align-items: center;
   justify-content: space-around;
 
-  margin-top: 8px;
-  padding: 6px 0 8px;
+  padding: 1px 10px;
 
-  border-bottom: 1px dashed #b8bec9;
+  border-top: 1px dashed #bcc5d3;
+  border-bottom: 1px dashed #bcc5d3;
 }
 
 
@@ -130,35 +129,49 @@
 /* =========================
    BACK BUTTON
 ========================= */
-
 .back-button {
   position: absolute;
 
-  bottom: 20px;
-  left: 25px;
+  right: 35px;
+  bottom: 30px;
 
-  width: calc(100% - 50px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-width: 150px;
+
+  padding: 14px 24px;
 
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
 
-  background: #6784e5;
-  color: #ffffff;
-
-  padding: 12px;
+  background: #667fe5;
+  color: white;
 
   font-size: 17px;
+  font-weight: 600;
 
   cursor: pointer;
 
-  transition: 0.2s ease;
-}
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
 
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
 
 .back-button:hover {
-  background: #5574dc;
+  background: #5871d6;
+
+  transform: translateY(-1px);
 }
 
+.back-button:active {
+  transform: translateY(0);
+}
 
 /* =========================
    MAIN MENU
@@ -322,9 +335,9 @@
 ========================= */
 
 .guest-list {
-  width: 100%;
-  margin: 0;
-  padding: 0;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .guest-row {

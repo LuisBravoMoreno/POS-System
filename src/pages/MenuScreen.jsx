@@ -1,6 +1,6 @@
 import "./MenuScreen.css";
 import Logo from "../components/Logo";
-import { ReceiptText } from "lucide-react";
+import { ReceiptText, ArrowLeft } from "lucide-react";
 
 export default function MenuScreen({ table, onBack }) {
 
@@ -35,23 +35,18 @@ export default function MenuScreen({ table, onBack }) {
 
           {/* CHECK HEADER */}
           <div className="check-header">
-
             <ReceiptText
               className="check-bill-icon"
               size={19}
             />
 
             <span>Check</span>
-
           </div>
-
 
           {/* TABLE + GUEST COUNT */}
           <div className="order-details">
 
-            {/* TABLE */}
             <div className="detail-item">
-
               <span className="detail-label">
                 Table
               </span>
@@ -59,17 +54,11 @@ export default function MenuScreen({ table, onBack }) {
               <span className="detail-value">
                 {table.id}
               </span>
-
             </div>
 
-
-            {/* VERTICAL DIVIDER */}
             <div className="detail-divider"></div>
 
-
-            {/* GUEST COUNT */}
             <div className="detail-item">
-
               <span className="detail-label">
                 {table.guests === 1 ? "Guest" : "Guests"}
               </span>
@@ -77,43 +66,32 @@ export default function MenuScreen({ table, onBack }) {
               <span className="detail-value">
                 {table.guests}
               </span>
-
             </div>
-
-          </div>
-
-
-          {/* =========================
-              INDIVIDUAL GUESTS
-          ========================= */}
-          <div className="guest-list">
-
-            {Array.from(
-              { length: table.guests },
-              (_, index) => (
-
-                <button
-                  key={index}
-                  className="guest-row"
-                >
-                  Guest {index + 1}
-                </button>
-
-              )
-            )}
 
           </div>
 
         </div>
 
+        {/* =========================
+            SCROLLABLE GUEST LIST
+        ========================= */}
+        <div className="guest-list">
 
-        {/* BACK TO TABLES */}
-        <button
-          className="back-button"
-          onClick={onBack}
-        >
-          ← Tables
-        </button>
+          {Array.from(
+            { length: table.guests },
+            (_, index) => (
+
+              <button
+                key={index}
+                className="guest-row"
+              >
+                Guest {index + 1}
+              </button>
+
+            )
+          )}
+
+        </div>
 
       </aside>
 
@@ -125,7 +103,6 @@ export default function MenuScreen({ table, onBack }) {
 
         {/* MENU TITLE */}
         <h1 className="menu-title">
-
           <span className="menu-dark">
             MEN
           </span>
@@ -133,7 +110,6 @@ export default function MenuScreen({ table, onBack }) {
           <span className="menu-blue">
             U
           </span>
-
         </h1>
 
 
@@ -152,6 +128,18 @@ export default function MenuScreen({ table, onBack }) {
           ))}
 
         </div>
+
+
+        {/* =========================
+            BACK TO TABLES
+        ========================= */}
+        <button
+          className="back-button"
+          onClick={onBack}
+        >
+          <ArrowLeft size={20} />
+          Tables
+        </button>
 
       </main>
 
