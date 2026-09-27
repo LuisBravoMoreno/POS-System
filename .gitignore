@@ -22,3 +22,25 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Python virtual environment
+.venv/
+venv/
+
+# Environment variables / secrets
+.env
+.env.*
+
+# Keep example environment files if created
+!.env.example
+
+# Python tooling
+.pytest_cache/
+.mypy_cache/
+
+# Excel seed/source files
+backend/*.xlsx
