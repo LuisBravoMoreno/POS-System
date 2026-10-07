@@ -1,44 +1,180 @@
-.table-card {
-  width: 130px;
-  height: 85px;
+/* =========================
+   TABLE CARD
+========================= */
 
-  border: none;
+.table-card {
+  width: 150px;
+  height: 130px;
+
+  background-color: #ffffff;
+
+  border: 1px solid #e7ebf2;
   border-radius: 12px;
 
-  color: white;
-
-  font-size: 1.3rem;
-  font-weight: bold;
+  color: #101a33;
 
   cursor: pointer;
 
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 
-  transition: all 0.15s ease;
+  gap: 6px;
+
+  box-shadow:
+    0 4px 12px rgba(15, 23, 42, 0.08);
+
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease,
+    border-color 0.15s ease;
 }
+
+
+/* =========================
+   TABLE GRID
+========================= */
 
 .tables-container {
   display: grid;
 
-  grid-template-columns: repeat(5, 140px);
+  grid-template-columns:
+    repeat(5, 150px);
 
-  gap: 40px;
+  gap: 28px;
 
   justify-content: center;
 }
 
+
+/* =========================
+   HOVER
+========================= */
+
 .table-card:hover {
   transform: translateY(-3px);
+
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.12);
 }
+
 
 .table-card:active {
-  transform: scale(0.95);
+  transform: scale(0.97);
 }
+
+
+/* =========================
+   TABLE NUMBER
+========================= */
+
+.table-number {
+  font-size: 1rem;
+  font-weight: 700;
+
+  color: #101a33;
+}
+
+
+/* =========================
+   GUESTS
+========================= */
+
+.table-guests {
+  font-size: 0.78rem;
+  font-weight: 600;
+
+  color: #64748b;
+}
+
+
+/* =========================
+   TABLE ICON
+========================= */
+
+.table-icon {
+  margin-bottom: 2px;
+}
+
+
+/* =========================
+   STATUS
+========================= */
+
+.table-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 6px;
+
+  margin-top: 4px;
+
+  padding: 5px 10px;
+
+  border-radius: 20px;
+
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+
+  border-radius: 50%;
+}
+
+
+/* =========================
+   AVAILABLE
+========================= */
 
 .table-card.available {
-  background-color: #6b8afd;
+  background-color: #ffffff;
 }
 
+
+.table-card.available .table-icon {
+  color: #198b65;
+}
+
+
+.table-card.available .table-status {
+  background-color: #e6f6f0;
+  color: #198b65;
+}
+
+
+.table-card.available .status-dot {
+  background-color: #198b65;
+}
+
+
+/* =========================
+   OCCUPIED
+========================= */
+
 .table-card.occupied {
-  background-color: #e76f51;
+  background-color: #fff7f7;
+
+  border-color: #ffb8be;
+}
+
+
+.table-card.occupied .table-icon {
+  color: #ff5f6d;
+}
+
+
+.table-card.occupied .table-status {
+  background-color: #ffe7e9;
+  color: #e74756;
+}
+
+
+.table-card.occupied .status-dot {
+  background-color: #ff5f6d;
 }

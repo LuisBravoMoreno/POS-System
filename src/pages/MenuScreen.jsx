@@ -7,6 +7,11 @@ import GuestSelector from "../components/menu/GuestSelector";
 import ProductGrid from "../components/menu/ProductGrid";
 import NavigationButtons from "../components/menu/NavigationButtons";
 
+import ItemActionsModal from "../components/menu/ItemActionsModal";
+import RemoveItemModal from "../components/menu/RemoveItemModal";
+import MoveItemModal from "../components/menu/MoveItemModal";
+import ItemDetailsModal from "../components/menu/ItemDetailsModals";
+
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -16,8 +21,15 @@ export default function MenuScreen({
   onBack,
 }) {
 
-  const [categories, setCategories] = useState([]);
-  const [categoryProducts, setCategoryProducts] = useState([]);
+  /* =========================
+     STATES
+  ========================= */
+
+  const [categories, setCategories] =
+    useState([]);
+
+  const [categoryProducts, setCategoryProducts] =
+    useState([]);
 
   const [selectedCategory, setSelectedCategory] =
     useState(null);
@@ -25,14 +37,187 @@ export default function MenuScreen({
   const [selectedGuest, setSelectedGuest] =
     useState(null);
 
+
+  // Productos que YA fueron enviados
+  // y existen en PostgreSQL.
   const [guestOrders, setGuestOrders] =
     useState({});
+
+
+  // Productos NUEVOS seleccionados
+  // por el cajero.
+  // Todavía NO existen en PostgreSQL.
+  const [
+    pendingGuestOrders,
+    setPendingGuestOrders,
+  ] = useState({});
+
 
   const [loading, setLoading] =
     useState(true);
 
   const [error, setError] =
     useState(null);
+
+
+  /* =========================
+     ITEM ACTION STATES
+  ========================= */
+
+  const [
+    selectedCheckItem,
+    setSelectedCheckItem,
+  ] = useState(null);
+
+
+  const [
+    activeItemModal,
+    setActiveItemModal,
+  ] = useState(null);
+
+
+  /* =========================
+     BUILD SENT ITEMS
+  ========================= */
+
+  /*
+    Esta función convierte la respuesta
+    de FastAPI al formato que utiliza
+    nuestro MenuSidebar.
+
+    Solamente incluye status = sent.
+
+    Los voided permanecen en PostgreSQL
+    pero NO aparecen en el Check.
+  */
+
+  const buildGuestOrders = (
+    orderData
+  ) => {
+
+    const loadedGuestOrders = {};
+
+
+    orderData.guests.forEach(
+      (guest) => {
+
+        const sentItems =
+          guest.items
+
+            .filter(
+              (item) =>
+                item.status === "sent"
+            )
+
+            .map((item) => ({
+
+              id:
+                item.id,
+
+              product_id:
+                item.product_id,
+
+              name:
+                item.product_name,
+
+              price:
+                Number(
+                  item.unit_price
+                ),
+
+              quantity:
+                item.quantity,
+
+              status:
+                item.status,
+
+            }));
+
+
+        loadedGuestOrders[
+          guest.guest_number
+        ] = sentItems;
+
+      }
+    );
+
+
+    return loadedGuestOrders;
+
+  };
+
+
+  /* =========================
+     RELOAD ORDER
+  ========================= */
+
+  /*
+    Después de modificar algo que YA
+    existe en PostgreSQL, volvemos
+    a consultar la orden.
+
+    PostgreSQL continúa siendo nuestra
+    fuente de verdad.
+  */
+
+  const reloadOrder = async () => {
+
+    const response = await fetch(
+      `${API_URL}/orders/${table.orderId}`
+    );
+
+
+    if (!response.ok) {
+
+      throw new Error(
+        `HTTP error: ${response.status}`
+      );
+
+    }
+
+
+    const orderData =
+      await response.json();
+
+
+    const loadedGuestOrders =
+      buildGuestOrders(
+        orderData
+      );
+
+
+    setGuestOrders(
+      loadedGuestOrders
+    );
+
+
+    return orderData;
+
+  };
+
+
+  /* =========================
+     LOAD EXISTING ORDER
+  ========================= */
+
+  useEffect(() => {
+
+    if (!table.order) {
+      return;
+    }
+
+
+    const loadedGuestOrders =
+      buildGuestOrders(
+        table.order
+      );
+
+
+    setGuestOrders(
+      loadedGuestOrders
+    );
+
+  }, [table.order]);
 
 
   /* =========================
@@ -48,19 +233,27 @@ export default function MenuScreen({
         setLoading(true);
         setError(null);
 
+
         const response = await fetch(
           `${API_URL}/categories`
         );
 
+
         if (!response.ok) {
+
           throw new Error(
             `HTTP error: ${response.status}`
           );
+
         }
 
-        const data = await response.json();
+
+        const data =
+          await response.json();
+
 
         setCategories(data);
+
 
       } catch (error) {
 
@@ -69,15 +262,18 @@ export default function MenuScreen({
           error
         );
 
+
         setError(
           "Could not load categories."
         );
+
 
       } finally {
 
         setLoading(false);
 
       }
+
     };
 
 
@@ -90,124 +286,1075 @@ export default function MenuScreen({
      CATEGORY
   ========================= */
 
-  const handleCategoryClick = async (category) => {
+  const handleCategoryClick =
+    async (category) => {
 
-    setSelectedCategory(category);
-    setSelectedGuest(null);
-    setCategoryProducts([]);
-    setError(null);
-
-    try {
-
-      const response = await fetch(
-        `${API_URL}/categories/${category.id}/products`
+      setSelectedCategory(
+        category
       );
 
-      if (!response.ok) {
-        throw new Error(
-          `HTTP error: ${response.status}`
+      setSelectedGuest(null); /*borra el guest seleccionado , limpia los productos anteriores */
+
+      setCategoryProducts([]);
+
+      setError(null);
+
+
+      try {
+
+        const response = await fetch(
+          `${API_URL}/categories/${category.id}/products`
         );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            `HTTP error: ${response.status}`
+          );
+
+        }
+
+
+        const data =
+          await response.json(); /* data podria contener el json con las categorias */
+
+
+        setCategoryProducts(
+          data
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Error loading products:",
+          error
+        );
+
+
+        setError(
+          "Could not load products."
+        );
+
       }
 
-      const data = await response.json();
-
-      setCategoryProducts(data);
-
-    } catch (error) {
-
-      console.error(
-        "Error loading products:",
-        error
-      );
-
-      setError(
-        "Could not load products."
-      );
-    }
-  };
+    };
 
 
   /* =========================
      ADD PRODUCT
   ========================= */
 
-  const addProductToGuest = (product) => {
+  const addProductToGuest =
+    (product) => {
 
-    if (!selectedGuest) {
+      if (!selectedGuest) {
+        return;
+      }
+
+
+      setPendingGuestOrders(
+        (previousOrders) => {
+
+          const currentGuestOrder =
+            previousOrders[
+              selectedGuest
+            ] || [];
+
+
+          return {
+
+            ...previousOrders,
+
+            [selectedGuest]: [
+              ...currentGuestOrder,
+              product,
+            ],
+
+          };
+
+        }
+      );
+
+    };
+
+
+  /* =========================
+     OPEN ITEM ACTIONS
+  ========================= */
+
+  const openItemActions =
+    (item) => {
+
+      setSelectedCheckItem(
+        item
+      );
+
+      setActiveItemModal(
+        "actions"
+      );
+
+    };
+
+
+  /* =========================
+     CLOSE ITEM MODALS
+  ========================= */
+
+  const closeItemModal = () => {
+
+    setActiveItemModal(
+      null
+    );
+
+    setSelectedCheckItem(
+      null
+    );
+
+  };
+
+
+  /* =========================
+     REMOVE PENDING QUANTITY
+  ========================= */
+
+  /*
+    Un pending todavía NO existe
+    en PostgreSQL.
+
+    Por eso simplemente quitamos
+    unidades del state de React.
+  */
+
+  const removePendingQuantity = (
+    guestNumber,
+    productId,
+    quantityToRemove
+  ) => {
+
+    setPendingGuestOrders(
+      (previousOrders) => {
+
+        const guestItems =
+          previousOrders[
+            guestNumber
+          ] || [];
+
+
+        let remainingToRemove =
+          quantityToRemove;
+
+
+        const updatedItems = [];
+
+
+        guestItems.forEach(
+          (product) => {
+
+            if (
+              product.id ===
+                productId &&
+              remainingToRemove > 0
+            ) {
+
+              remainingToRemove -=
+                1;
+
+              return;
+
+            }
+
+
+            updatedItems.push(
+              product
+            );
+
+          }
+        );
+
+
+        return {
+
+          ...previousOrders,
+
+          [guestNumber]:
+            updatedItems,
+
+        };
+
+      }
+    );
+
+
+    closeItemModal();
+
+  };
+
+
+  /* =========================
+     VOID SENT ITEM
+  ========================= */
+
+  /*
+    Un producto SENT ya existe
+    en PostgreSQL.
+
+    NO lo borramos directamente.
+
+    Utilizamos nuestro endpoint
+    de VOID para mantener historial.
+  */
+
+  const voidSentItem = async (
+    itemId,
+    quantity
+  ) => {
+
+    try {
+
+      setError(null);
+
+
+      const response = await fetch(
+        `${API_URL}/orders/${table.orderId}/items/${itemId}/void`,
+        {
+          method: "PATCH",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            quantity:
+              quantity,
+          }),
+        }
+      );
+
+
+      if (!response.ok) {
+
+        const errorData =
+          await response.json();
+
+
+        throw new Error(
+          errorData.detail ||
+          `HTTP error: ${response.status}`
+        );
+
+      }
+
+
+      const voidResult =
+        await response.json();
+
+
+      console.log(
+        "Item voided successfully:",
+        voidResult
+      );
+
+
+      /*
+        No modificamos manualmente
+        guestOrders.
+
+        Volvemos a PostgreSQL para
+        obtener la orden actualizada.
+      */
+
+      await reloadOrder();
+
+
+      closeItemModal();
+
+
+    } catch (error) {
+
+      console.error(
+        "Error voiding item:",
+        error
+      );
+
+
+      setError(
+        error.message ||
+        "Could not remove item."
+      );
+
+    }
+
+  };
+
+
+  /* =========================
+     MOVE PENDING QUANTITY
+  ========================= */
+
+  /*
+    Un producto PENDING todavía
+    no existe en PostgreSQL.
+
+    Por eso el movimiento ocurre
+    solamente en React.
+  */
+
+  const movePendingQuantity = (
+    fromGuest,
+    toGuest,
+    productId,
+    quantityToMove
+  ) => {
+
+    if (
+      fromGuest === toGuest
+    ) {
       return;
     }
 
-    setGuestOrders((previousOrders) => {
 
-      const currentGuestOrder =
-        previousOrders[selectedGuest] || [];
+    setPendingGuestOrders(
+      (previousOrders) => {
 
-      return {
-        ...previousOrders,
+        const sourceItems =
+          previousOrders[
+            fromGuest
+          ] || [];
 
-        [selectedGuest]: [
-          ...currentGuestOrder,
-          product,
-        ],
-      };
-    });
+
+        const destinationItems =
+          previousOrders[
+            toGuest
+          ] || [];
+
+
+        let remainingToMove =
+          quantityToMove;
+
+
+        const updatedSource =
+          [];
+
+        const itemsToMove =
+          [];
+
+
+        sourceItems.forEach(
+          (product) => {
+
+            if (
+              product.id ===
+                productId &&
+              remainingToMove > 0
+            ) {
+
+              itemsToMove.push(
+                product
+              );
+
+              remainingToMove -=
+                1;
+
+            } else {
+
+              updatedSource.push(
+                product
+              );
+
+            }
+
+          }
+        );
+
+
+        return {
+
+          ...previousOrders,
+
+          [fromGuest]:
+            updatedSource,
+
+          [toGuest]: [
+            ...destinationItems,
+            ...itemsToMove,
+          ],
+
+        };
+
+      }
+    );
+
+
+    closeItemModal();
+
   };
+
+
+  /* =========================
+     MOVE SENT ITEM
+  ========================= */
+
+  /*
+    Un producto SENT ya existe
+    en PostgreSQL.
+
+    MOVE TOTAL:
+    El backend cambia el guest_id
+    del OrderItem.
+
+    MOVE PARCIAL:
+    El backend reduce la cantidad
+    original y crea un nuevo
+    OrderItem para el Guest destino.
+  */
+
+  const moveSentItem = async (
+    itemId,
+    destinationGuest,
+    quantity
+  ) => {
+
+    try {
+
+      setError(null);
+
+
+      const response = await fetch(
+        `${API_URL}/orders/${table.orderId}/items/${itemId}/move`,
+        {
+          method: "PATCH",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            guest_number:
+              destinationGuest,
+
+            quantity:
+              quantity,
+          }),
+        }
+      );
+
+
+      if (!response.ok) {
+
+        const errorData =
+          await response.json();
+
+
+        throw new Error(
+          errorData.detail ||
+          `HTTP error: ${response.status}`
+        );
+
+      }
+
+
+      const moveResult =
+        await response.json();
+
+
+      console.log(
+        "Item moved successfully:",
+        moveResult
+      );
+
+
+      /*
+        No modificamos guestOrders
+        manualmente.
+
+        PostgreSQL continúa siendo
+        nuestra fuente de verdad.
+      */
+
+      await reloadOrder();
+
+
+      closeItemModal();
+
+
+    } catch (error) {
+
+      console.error(
+        "Error moving sent item:",
+        error
+      );
+
+
+      setError(
+        error.message ||
+        "Could not move item."
+      );
+
+    }
+
+  };
+
+
+  /* =========================
+     SEND ORDER
+  ========================= */
+
+  const sendOrder = async () => {
+
+    const itemsToSend =
+      [];
+
+
+    Object.entries(
+      pendingGuestOrders
+    ).forEach(
+      ([guestNumber, products]) => {
+
+        /*
+          Agrupamos solamente productos
+          repetidos dentro del MISMO
+          Send Order.
+        */
+
+        const groupedProducts =
+          {};
+
+
+        products.forEach(
+          (product) => {
+
+            const productId =
+              product.id;
+
+
+            if (
+              groupedProducts[
+                productId
+              ]
+            ) {
+
+              groupedProducts[
+                productId
+              ].quantity += 1;
+
+            } else {
+
+              groupedProducts[
+                productId
+              ] = {
+
+                guest_number:
+                  Number(
+                    guestNumber
+                  ),
+
+                product_id:
+                  productId,
+
+                quantity:
+                  1,
+
+              };
+
+            }
+
+          }
+        );
+
+
+        itemsToSend.push(
+          ...Object.values(
+            groupedProducts
+          )
+        );
+
+      }
+    );
+
+
+    /* =========================
+       EMPTY SEND
+    ========================= */
+
+    if (
+      itemsToSend.length === 0
+    ) {
+      return false;
+    }
+
+
+    try {
+
+      setError(null);
+
+
+      /* =========================
+         SEND TO BACKEND
+      ========================= */
+
+      const response = await fetch(
+        `${API_URL}/orders/${table.orderId}/send`,
+        {
+          method:
+            "POST",
+
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+
+          body: JSON.stringify({
+            items:
+              itemsToSend,
+          }),
+        }
+      );
+
+
+      if (!response.ok) {
+
+        const errorData =
+          await response.json();
+
+
+        throw new Error(
+          errorData.detail ||
+          `HTTP error: ${response.status}`
+        );
+
+      }
+
+
+      const sendResult =
+        await response.json();
+
+
+      console.log(
+        "Order sent successfully:",
+        sendResult
+      );
+
+
+      /* =========================
+         RELOAD FROM DATABASE
+      ========================= */
+
+      await reloadOrder();
+
+
+      /*
+        Solamente limpiamos los pending
+        después de confirmar que el
+        backend guardó correctamente.
+      */
+
+      setPendingGuestOrders(
+        {}
+      );
+
+      return true;
+
+
+    } catch (error) {
+
+      console.error(
+        "Error sending order:",
+        error
+      );
+
+
+      setError(
+        error.message ||
+        "Could not send order."
+      );
+
+      return false;
+
+    }
+
+  };
+
+/* =========================
+   HANDLE PAYMENT
+========================= */
+
+const handlePayment = async () => {
+
+  try {
+
+    setError(null);
+
+
+    /* =========================
+       SEND PENDING PRODUCTS
+    ========================= */
+
+    if (canSendOrder) {
+
+      const sentSuccessfully =
+        await sendOrder();
+
+
+      if (!sentSuccessfully) {
+        return;
+      }
+
+    }
+
+
+    /* =========================
+       GET CURRENT ORDER
+    ========================= */
+
+    const orderData =
+      await reloadOrder();
+
+
+    /* =========================
+       CHECK FOR SENT ITEMS
+    ========================= */
+
+    const hasSentItems =
+      orderData.guests.some(
+        (guest) =>
+          guest.items.some(
+            (item) =>
+              item.status === "sent"
+          )
+      );
+
+
+    /* =========================
+       BLOCK EMPTY PAYMENT
+    ========================= */
+
+    if (!hasSentItems) {
+
+      alert(
+        "Cannot process payment. This order has no items."
+      );
+
+      return;
+
+    }
+
+
+    /* =========================
+       CLOSE ORDER
+    ========================= */
+
+    await closeOrder();
+
+
+  } catch (error) {
+
+    console.error(
+      "Payment error:",
+      error
+    );
+
+
+    setError(
+      error.message ||
+      "Could not process payment."
+    );
+
+  }
+
+};
+
+
+/* =========================
+    CANCEL ORDER
+========================= */
+
+const cancelOrder = async () => {
+
+  /*
+    Confirmation before cancelling
+    the entire order.
+  */
+
+const confirmed = window.confirm(
+    "Are you sure you want to cancel this order?"
+);
+
+
+    if (!confirmed) {
+      return;
+    }
+
+
+    try {
+
+      setError(null);
+
+
+      const response = await fetch(
+        `${API_URL}/orders/${table.orderId}/cancel`,
+        {
+          method: "PATCH",
+        }
+      );
+
+
+      if (!response.ok) {
+
+        const errorData =
+          await response.json();
+
+
+        throw new Error(
+          errorData.detail ||
+          `HTTP error: ${response.status}`
+        );
+
+      }
+
+
+      const cancelResult =
+        await response.json();
+
+
+      console.log(
+        "Order cancelled successfully:",
+      cancelResult
+      );
+
+
+      /*
+        The order is no longer OPEN,
+        therefore the table becomes
+        available again.
+      */
+
+      onBack();
+
+
+    } catch (error) {
+
+      console.error(
+        "Error cancelling order:",
+        error
+      );
+
+
+      setError(
+        error.message ||
+        "Could not cancel order."
+      );
+
+  }
+
+};
+
+
+/* =========================
+   CLOSE ORDER / PAYMENT
+========================= */
+
+const closeOrder = async () => {
+
+  try {
+
+    setError(null);
+
+
+    const response = await fetch(
+      `${API_URL}/orders/${table.orderId}/close`,
+      {
+        method: "PATCH",
+      }
+    );
+
+
+    if (!response.ok) {
+
+      const errorData =
+        await response.json();
+
+
+      throw new Error(
+        errorData.detail ||
+        `HTTP error: ${response.status}`
+      );
+
+    }
+
+
+    const closeResult =
+      await response.json();
+
+
+    console.log(
+      "Order closed successfully:",
+      closeResult
+    );
+
+
+    /*
+      Después de cerrar la orden
+      regresamos a Tables.
+
+      La mesa ya no debería tener
+      una orden OPEN.
+    */
+
+    onBack();
+
+
+  } catch (error) {
+
+    console.error(
+      "Error closing order:",
+      error
+    );
+
+
+    setError(
+      error.message ||
+      "Could not close order."
+    );
+
+  }
+
+};
 
 
   /* =========================
      BACK TO CATEGORIES
   ========================= */
 
-  const goBackToCategories = () => {
+  const goBackToCategories =
+    () => {
 
-    setSelectedCategory(null);
-    setSelectedGuest(null);
-    setCategoryProducts([]);
-    setError(null);
+      setSelectedCategory(
+        null
+      );
 
-  };
+      setSelectedGuest(
+        null
+      );
 
+      setCategoryProducts(
+        []
+      );
+
+      setError(
+        null
+      );
+
+    };
+
+
+  /* =========================
+     CAN SEND ORDER
+  ========================= */
+
+  const canSendOrder =
+    Object.values(
+      pendingGuestOrders
+    ).some(
+      (products) =>
+        products.length > 0
+    );
+
+
+  /* =========================
+     RENDER
+  ========================= */
 
   return (
 
     <div className="menu-container">
 
+
+      {/* =========================
+          CHECK
+      ========================= */}
+
       <MenuSidebar
-        table={table}
-        selectedGuest={selectedGuest}
-        setSelectedGuest={setSelectedGuest}
-        guestOrders={guestOrders}
+
+        table={
+          table
+        }
+
+        selectedGuest={
+          selectedGuest
+        }
+
+        setSelectedGuest={
+          setSelectedGuest
+        }
+
+        guestOrders={
+          guestOrders
+        }
+
+        pendingGuestOrders={
+          pendingGuestOrders
+        }
+
+        onItemClick={
+          openItemActions
+        }
+
       />
 
 
+      {/* =========================
+          MAIN
+      ========================= */}
+
       <main className="menu-main">
+
 
         {!selectedCategory ? (
 
           <>
 
+
             {loading && (
+
               <div>
                 Loading categories...
               </div>
+
             )}
 
 
             {error && (
+
               <div className="empty-category">
+
                 {error}
+
               </div>
-            )}
-
-
-            {!loading && !error && (
-
-              <CategoryGrid
-                categories={categories}
-                onCategoryClick={handleCategoryClick}
-              />
 
             )}
+
+
+            {!loading &&
+              !error && (
+
+                <CategoryGrid
+
+                  categories={
+                    categories
+                  }
+
+                  onCategoryClick={
+                    handleCategoryClick
+                  }
+
+                />
+
+              )}
+
 
           </>
 
@@ -215,58 +1362,352 @@ export default function MenuScreen({
 
           <>
 
+
+            {/* CATEGORY TITLE */}
+
             <h1 className="category-title">
-              {selectedCategory.name}
+
+              {
+                selectedCategory.name
+              }
+
             </h1>
 
 
+            {/* GUEST SELECTOR */}
+
             <GuestSelector
-              guestCount={table.guests}
-              selectedGuest={selectedGuest}
-              onSelectGuest={setSelectedGuest}
+
+              guestCount={
+                table.guests
+              }
+
+              selectedGuest={
+                selectedGuest
+              }
+
+              onSelectGuest={
+                setSelectedGuest
+              }
+
             />
 
+
+            {/* PRODUCTS */}
 
             {error ? (
 
               <div className="empty-category">
+
                 {error}
+
               </div>
 
             ) : (
 
               <ProductGrid
-                products={categoryProducts}
-                selectedGuest={selectedGuest}
-                onProductClick={addProductToGuest}
+
+                products={
+                  categoryProducts
+                }
+
+                selectedGuest={
+                  selectedGuest
+                }
+
+                onProductClick={
+                  addProductToGuest
+                }
+
               />
 
             )}
 
 
+            {/* EMPTY CATEGORY */}
+
             {!error &&
-              categoryProducts.length === 0 && (
+              categoryProducts.length ===
+                0 && (
 
                 <div className="empty-category">
+
                   No products found for{" "}
-                  {selectedCategory.name}.
+
+                  {
+                    selectedCategory.name
+                  }.
+
                 </div>
 
               )}
+
 
           </>
 
         )}
 
 
-        <NavigationButtons
-          showCategories={Boolean(selectedCategory)}
-          onCategories={goBackToCategories}
-          onTables={onBack}
-        />
+        {/* =========================
+            NAVIGATION
+        ========================= */}
 
+        <NavigationButtons
+
+          showCategories={
+            Boolean(
+              selectedCategory
+            )
+          }
+
+          onCategories={
+            goBackToCategories
+          }
+
+          onTables={
+            onBack
+          }
+
+          onSendOrder={
+            sendOrder
+          }
+
+          canSendOrder={
+            canSendOrder
+          }
+
+          onPayment={
+            handlePayment
+          }
+
+          onCancelOrder={
+            cancelOrder
+          }
+        />
+        
       </main>
 
+
+      {/* =========================
+          ITEM ACTIONS
+      ========================= */}
+
+      {activeItemModal ===
+        "actions" &&
+        selectedCheckItem && (
+
+          <ItemActionsModal
+
+            item={
+              selectedCheckItem
+            }
+
+            onRemove={() =>
+              setActiveItemModal(
+                "remove"
+              )
+            }
+
+            /*
+              Tanto PENDING como SENT
+              pueden abrir MOVE.
+
+              La diferencia se decide
+              posteriormente en onConfirm.
+            */
+            onMove={() =>
+              setActiveItemModal(
+                "move"
+              )
+            }
+
+            onDetails={() =>
+              setActiveItemModal(
+                "details"
+              )
+            }
+
+            onClose={
+              closeItemModal
+            }
+
+          />
+
+        )}
+
+
+      {/* =========================
+          REMOVE
+      ========================= */}
+
+      {activeItemModal ===
+        "remove" &&
+        selectedCheckItem && (
+
+          <RemoveItemModal
+
+            item={
+              selectedCheckItem
+            }
+
+            onBack={() =>
+              setActiveItemModal(
+                "actions"
+              )
+            }
+
+            onConfirm={
+              (quantity) => {
+
+                /*
+                  PENDING:
+                  solamente React.
+                */
+
+                if (
+                  selectedCheckItem.status ===
+                  "pending"
+                ) {
+
+                  removePendingQuantity(
+                    selectedCheckItem.guestNumber,
+                    selectedCheckItem.productId,
+                    quantity
+                  );
+
+                  return;
+
+                }
+
+
+                /*
+                  SENT:
+                  PostgreSQL / VOID.
+                */
+
+                if (
+                  selectedCheckItem.status ===
+                  "sent"
+                ) {
+
+                  voidSentItem(
+                    selectedCheckItem.itemId,
+                    quantity
+                  );
+
+                }
+
+              }
+            }
+
+          />
+
+        )}
+
+
+      {/* =========================
+          MOVE
+      ========================= */}
+
+      {activeItemModal ===
+        "move" &&
+        selectedCheckItem && (
+
+          <MoveItemModal
+
+            item={
+              selectedCheckItem
+            }
+
+            guestCount={
+              table.guests
+            }
+
+            onBack={() =>
+              setActiveItemModal(
+                "actions"
+              )
+            }
+
+            onConfirm={
+              (
+                destinationGuest,
+                quantity
+              ) => {
+
+                /*
+                  PENDING:
+                  solamente React.
+                */
+
+                if (
+                  selectedCheckItem.status ===
+                  "pending"
+                ) {
+
+                  movePendingQuantity(
+                    selectedCheckItem.guestNumber,
+                    destinationGuest,
+                    selectedCheckItem.productId,
+                    quantity
+                  );
+
+                  return;
+
+                }
+
+
+                /*
+                  SENT:
+                  PostgreSQL.
+                */
+
+                if (
+                  selectedCheckItem.status ===
+                  "sent"
+                ) {
+
+                  moveSentItem(
+                    selectedCheckItem.itemId,
+                    destinationGuest,
+                    quantity
+                  );
+
+                }
+
+              }
+            }
+
+          />
+
+        )}
+
+
+      {/* =========================
+          DETAILS
+      ========================= */}
+
+      {activeItemModal ===
+        "details" &&
+        selectedCheckItem && (
+
+          <ItemDetailsModal
+
+            item={
+              selectedCheckItem
+            }
+
+            onClose={
+              closeItemModal
+            }
+
+          />
+
+        )}
+
+
     </div>
+
   );
+
 }

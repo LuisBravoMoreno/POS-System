@@ -1,8 +1,12 @@
 import "./TableCard.css";
+import { Armchair } from "lucide-react";
+
+
 export default function TableCard({
   table,
   onClick,
 }) {
+
   return (
     <button
       className={`table-card ${
@@ -12,16 +16,43 @@ export default function TableCard({
       }`}
       onClick={() => onClick(table.id)}
     >
-      <div>Table {table.id}</div>
 
-      {table.occupied && (      
-        <small>                 
+      {/* TABLE ICON */}
+
+      <Armchair
+        className="table-icon"
+        size={32}
+      />
+
+
+      {/* TABLE NUMBER */}
+
+      <div className="table-number">
+        Table {table.id}
+      </div>
+
+
+      {/* GUESTS */}
+
+      {table.occupied && (
+        <small className="table-guests">
           {table.guests} Guests
         </small>
       )}
+
+
+      {/* STATUS */}
+
+      <div className="table-status">
+
+        <span className="status-dot" />
+
+        {table.occupied
+          ? "Occupied"
+          : "Available"}
+
+      </div>
+
     </button>
   );
 }
-
-/*muestra informacion que ya viene en la prop table*/
-      /*ejemplo si el padre tiene: id:3;occupied:true;guests:4*/

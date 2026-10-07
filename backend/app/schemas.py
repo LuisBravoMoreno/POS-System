@@ -16,3 +16,7 @@ class OrderSend(BaseModel):
 
 class OrderItemVoid(BaseModel):
     quantity: int
+
+class OrderItemMove(BaseModel):
+    guest_number: int
+    quantity: int

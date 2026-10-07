@@ -19,10 +19,10 @@ export default function CategoryGrid({
         {categories.map((category) => (
 
           <button
-            key={category.id}
+            key={category.id}/* el id indica la posicion en el array de cada categoria */
             className="menu-option"
             onClick={() =>
-              onCategoryClick(category)
+              onCategoryClick(category) /* cuando el usuario haga click en ese button  */
             }
           >
             {category.name}

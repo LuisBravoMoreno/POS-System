@@ -13,7 +13,7 @@ from app.models import (
     OrderGuest,
     OrderItem,
 )
-from app.schemas import OrderCreate, OrderItemCreate, OrderSend, OrderItemVoid
+from app.schemas import OrderCreate, OrderItemCreate, OrderSend, OrderItemVoid, OrderItemMove
 from fastapi.middleware.cors import CORSMiddleware
 
 
@@ -416,6 +416,113 @@ def void_order_item(
         "item": order_item,
     }
 
+@app.patch("/orders/{order_id}/items/{item_id}/move")
+def move_order_item(
+    order_id: int,
+    item_id: int,
+    move_data: OrderItemMove,
+    db: Session = Depends(get_db),
+):
+    # 1. Buscar la orden
+    order = db.query(Order).filter(Order.id == order_id).first()
+
+    if not order:
+        raise HTTPException(
+            status_code=404,
+            detail="Order not found."
+        )
+
+    # 2. Solo permitimos mover items de órdenes abiertas
+    if order.status != "open":
+        raise HTTPException(
+            status_code=409,
+            detail="Only open orders can have items moved."
+        )
+
+    # 3. Buscar el item y comprobar que pertenece a esta orden
+    order_item = (
+        db.query(OrderItem)
+        .join(OrderGuest, OrderItem.guest_id == OrderGuest.id)
+        .filter(
+            OrderItem.id == item_id,
+            OrderGuest.order_id == order_id,
+        )
+        .first()
+    )
+
+    if not order_item:
+        raise HTTPException(
+            status_code=404,
+            detail="Order item not found."
+        )
+
+    # 4. Solo mover items activos/enviados
+    if order_item.status != "sent":
+        raise HTTPException(
+            status_code=409,
+            detail="Only sent items can be moved."
+        )
+
+    # 5. Validar cantidad
+    if move_data.quantity <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Quantity must be greater than 0."
+        )
+
+    if move_data.quantity > order_item.quantity:
+        raise HTTPException(
+            status_code=400,
+            detail="Cannot move more than the current quantity."
+        )
+
+    # 6. Buscar Guest destino DENTRO de la misma orden
+    destination_guest = (
+        db.query(OrderGuest)
+        .filter(
+            OrderGuest.order_id == order_id,
+            OrderGuest.guest_number == move_data.guest_number,
+        )
+        .first()
+    )
+
+    if not destination_guest:
+        raise HTTPException(
+            status_code=404,
+            detail="Destination guest not found in this order."
+        )
+
+    # 7. No permitir mover al mismo Guest
+    if destination_guest.id == order_item.guest_id:
+        raise HTTPException(
+            status_code=400,
+            detail="Item is already assigned to this guest."
+        )
+
+    # 8. MOVE TOTAL
+    if move_data.quantity == order_item.quantity:
+        order_item.guest_id = destination_guest.id
+
+    # 9. MOVE PARCIAL
+    else:
+        order_item.quantity -= move_data.quantity
+
+        moved_item = OrderItem(
+            guest_id=destination_guest.id,
+            product_id=order_item.product_id,
+            quantity=move_data.quantity,
+            unit_price=order_item.unit_price,
+            status="sent",
+        )
+
+        db.add(moved_item)
+
+    db.commit()
+
+    return {
+        "message": "Order item moved successfully."
+    }
+
 
 @app.patch("/orders/{order_id}/close")
 def close_order(
@@ -454,3 +561,70 @@ def close_order(
     }
 
 
+
+@app.patch("/orders/{order_id}/cancel")
+def cancel_order(
+    order_id: int,
+    db: Session = Depends(get_db),
+):
+    # 1. Buscar la orden
+    order = (
+        db.query(Order)
+        .filter(Order.id == order_id)
+        .first()
+    )
+
+    if not order:
+        raise HTTPException(
+            status_code=404,
+            detail="Order not found."
+        )
+
+    # 2. Solo una orden OPEN puede cancelarse
+    if order.status != "open":
+        raise HTTPException(
+            status_code=409,
+            detail="Only an open order can be cancelled."
+        )
+
+    # 3. Buscar los guests de esta orden
+    guests = (
+        db.query(OrderGuest)
+        .filter(
+            OrderGuest.order_id == order_id
+        )
+        .all()
+    )
+
+    guest_ids = [
+        guest.id
+        for guest in guests
+    ]
+
+    # 4. Si existen guests, buscar items SENT
+    if guest_ids:
+
+        sent_items = (
+            db.query(OrderItem)
+            .filter(
+                OrderItem.guest_id.in_(guest_ids),
+                OrderItem.status == "sent",
+            )
+            .all()
+        )
+
+        # 5. Todos los SENT pasan a VOIDED
+        for item in sent_items:
+            item.status = "voided"
+
+    # 6. Cancelar la orden
+    order.status = "cancelled"
+
+    # 7. Guardar todo en una sola transacción
+    db.commit()
+    db.refresh(order)
+
+    return {
+        "message": "Order cancelled successfully.",
+        "order": order,
+    }

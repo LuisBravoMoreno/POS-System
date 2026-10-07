@@ -28,6 +28,8 @@
 
   overflow: hidden;
 }
+
+
 /* =========================
    FIXED TOP SECTION
 ========================= */
@@ -61,9 +63,11 @@
 
 
 /* Check + Bill Icon */
+
 .check-header {
   display: flex;
   align-items: center;
+
   gap: 10px;
 
   padding: 10px 15px;
@@ -108,6 +112,7 @@
 
 .detail-divider {
   height: 30px;
+
   border-left: 1px dashed #b8bec9;
 }
 
@@ -127,58 +132,12 @@
 
 
 /* =========================
-   BACK BUTTON
-========================= */
-.back-button {
-  position: absolute;
-
-  right: 35px;
-  bottom: 30px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 8px;
-
-  min-width: 150px;
-
-  padding: 14px 24px;
-
-  border: none;
-  border-radius: 12px;
-
-  background: #667fe5;
-  color: white;
-
-  font-size: 17px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
-
-  transition:
-    background 0.2s ease,
-    transform 0.2s ease;
-}
-
-.back-button:hover {
-  background: #5871d6;
-
-  transform: translateY(-1px);
-}
-
-.back-button:active {
-  transform: translateY(0);
-}
-
-/* =========================
    MAIN MENU
 ========================= */
 
 .menu-main {
   position: relative;
+
   flex: 1;
 
   min-width: 0;
@@ -331,19 +290,24 @@
     width: 180px;
   }
 }
+
+
 /* =========================
    GUEST LIST
 ========================= */
 
 .guest-list {
   flex: 1;
+
   min-height: 0;
+
   overflow-y: auto;
 }
 
+
 .guest-row {
   width: 100%;
-  height: 32px;
+  height: 28px;
 
   display: flex;
   align-items: center;
@@ -369,9 +333,12 @@
   transition: background 0.2s ease;
 }
 
+
 .guest-row:hover {
   background: #eef3fc;
 }
+
+
 /* =========================
    CATEGORY PRODUCT SCREEN
 ========================= */
@@ -396,6 +363,7 @@
   margin-bottom: 35px;
 }
 
+
 .guest-selector-title {
   display: flex;
   align-items: center;
@@ -410,12 +378,14 @@
   font-weight: 600;
 }
 
+
 .guest-selector {
   display: flex;
   flex-wrap: wrap;
 
   gap: 10px;
 }
+
 
 .guest-selector-button {
   width: 45px;
@@ -439,9 +409,11 @@
     transform 0.2s ease;
 }
 
+
 .guest-selector-button:hover {
   background: #e7edfa;
 }
+
 
 .guest-selector-button.selected {
   background: #667fe5;
@@ -503,12 +475,14 @@
     background 0.2s ease;
 }
 
+
 .product-card:hover {
   transform: translateY(-2px);
 
   box-shadow:
     0 10px 24px rgba(23, 35, 61, 0.12);
 }
+
 
 .product-card:active {
   transform: scale(0.98);
@@ -545,44 +519,6 @@
 
 
 /* =========================
-   BACK TO CATEGORIES
-========================= */
-
-.categories-back-button {
-  position: absolute;
-
-  right: 210px;
-  bottom: 30px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  gap: 8px;
-
-  min-width: 150px;
-
-  padding: 14px 24px;
-
-  border: 1px solid #667fe5;
-  border-radius: 12px;
-
-  background: white;
-
-  color: #5878df;
-
-  font-size: 16px;
-  font-weight: 600;
-
-  cursor: pointer;
-}
-
-.categories-back-button:hover {
-  background: #eef2ff;
-}
-
-
-/* =========================
    GUEST CHECK ITEMS
 ========================= */
 
@@ -592,32 +528,44 @@
   color: #4566d8;
 }
 
+
 .guest-items {
-  padding: 4px 8px 8px 18px;
+  padding: 4px 8px;
 
   background: #fafbfe;
 }
+
 
 .guest-item {
   display: flex;
 
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
 
-  gap: 8px;
+  width: 100%;
 
-  padding: 5px 0;
+  padding: 3px 0;
+
+  box-sizing: border-box;
 
   color: #657086;
 
-  font-size: 11px;
+  font-size: 13px;
 }
+
 
 .guest-item span:first-child {
   flex: 1;
+
+  text-align: left;
 }
 
+
 .guest-item span:last-child {
+  min-width: 45px;
+
+  text-align: right;
+
   white-space: nowrap;
 
   font-weight: 600;
@@ -635,3 +583,691 @@
 
   font-size: 15px;
 }
+
+
+/* =========================
+   NAVIGATION BUTTONS
+========================= */
+
+.navigation-buttons {
+  position: absolute;
+
+  right: 35px;
+  bottom: 30px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+}
+
+
+/* =========================
+   SEND ORDER BUTTON
+========================= */
+
+.send-order-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-width: 150px;
+
+  padding: 14px 24px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #2f80ed;
+  color: white;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.08);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+}
+
+
+.send-order-button:hover:not(:disabled) {
+  background: #256fd1;
+
+  transform: translateY(-1px);
+}
+
+
+.send-order-button:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* =========================
+   PAYMENT BUTTON
+========================= */
+
+.payment-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-width: 150px;
+
+  padding: 14px 24px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #20a779;
+  color: white;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.08);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.payment-button:hover {
+  background: #198b65;
+  transform: translateY(-1px);
+}
+
+
+.payment-button:active {
+  transform: translateY(0);
+}
+
+
+/* SEND ORDER DISABLED */
+
+.send-order-button:disabled {
+  opacity: 0.45;
+
+  cursor: not-allowed;
+}
+
+/* =========================
+   CANCEL ORDER BUTTON
+========================= */
+
+.cancel-order-button {
+  background-color: #ff5f6d;
+  color: white;
+
+  border: none;
+  border-radius: 12px;
+
+  padding: 14px 24px;
+
+  font-size: 16px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  transition: 0.2s ease;
+}
+
+.cancel-order-button:hover {
+  background-color: #f05261;
+  transform: translateY(-1px);
+}
+
+
+/* =========================
+   BACK BUTTON
+========================= */
+
+.back-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 8px;
+
+  min-width: 150px;
+
+  padding: 14px 24px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: #E7EEF8;
+  color: #17233d;
+
+  font-size: 17px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  box-shadow:
+    0 6px 18px rgba(0, 0, 0, 0.08);
+
+  transition:
+    background 0.2s ease,
+    transform 0.2s ease;
+}
+
+
+.back-button:hover {
+  background: #5871d6;
+
+  transform: translateY(-1px);
+}
+
+
+.back-button:active {
+  transform: translateY(0);
+}
+
+/* =========================
+   CLICKABLE PENDING ITEM
+========================= */
+
+.guest-item-pending {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.guest-item-pending:hover {
+  background: #eef3fc;
+}
+
+
+/* =========================
+   ITEM MODAL OVERLAY
+========================= */
+
+.item-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  box-sizing: border-box;
+
+  background:
+    rgba(23, 35, 61, 0.45);
+}
+
+
+/* =========================
+   ACTIONS MODAL
+========================= */
+
+.item-actions-modal {
+  width: 310px;
+
+  padding: 20px;
+
+  border-radius: 16px;
+
+  background: white;
+
+  box-shadow:
+    0 18px 50px
+    rgba(23, 35, 61, 0.2);
+}
+
+
+/* =========================
+   OPERATION MODAL
+========================= */
+
+.item-operation-modal {
+  width: 390px;
+
+  padding: 24px;
+
+  border-radius: 18px;
+
+  background: white;
+
+  box-shadow:
+    0 18px 50px
+    rgba(23, 35, 61, 0.2);
+}
+
+
+/* =========================
+   MODAL HEADER
+========================= */
+
+.item-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  margin-bottom: 20px;
+}
+
+
+.item-modal-title {
+  color: #17233d;
+
+  font-size: 20px;
+  font-weight: 700;
+}
+
+
+.item-modal-subtitle {
+  margin-top: 5px;
+
+  color: #657086;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+.item-modal-close {
+  width: 36px;
+  height: 36px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 9px;
+
+  background: #f1f4f9;
+
+  color: #657086;
+
+  cursor: pointer;
+}
+
+
+/* =========================
+   ITEM ACTION LIST
+========================= */
+
+.item-actions-list {
+  display: flex;
+  flex-direction: column;
+}
+
+
+.item-action-button {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 14px 12px;
+
+  border: none;
+  border-bottom:
+    1px solid #e8edf5;
+
+  background: white;
+
+  color: #17233d;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  text-align: left;
+
+  cursor: pointer;
+}
+
+
+.item-action-button:hover {
+  background: #f5f7fc;
+}
+
+
+.item-action-remove {
+  color: #d94b5c;
+}
+
+
+/* =========================
+   CANCEL
+========================= */
+
+.item-modal-cancel {
+  width: 100%;
+
+  margin-top: 14px;
+  padding: 12px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #f1f4f9;
+
+  color: #596579;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+/* =========================
+   QUANTITY
+========================= */
+
+.item-operation-price {
+  margin-bottom: 20px;
+
+  color: #657086;
+
+  font-size: 14px;
+}
+
+
+.item-operation-question {
+  margin: 20px 0 12px;
+
+  color: #17233d;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+.quantity-selector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 24px;
+
+  margin: 20px 0;
+}
+
+
+.quantity-selector button {
+  width: 46px;
+  height: 46px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 11px;
+
+  background: #eef2f8;
+
+  color: #17233d;
+
+  cursor: pointer;
+}
+
+
+.quantity-selector button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
+.quantity-selector span {
+  min-width: 35px;
+
+  color: #17233d;
+
+  font-size: 21px;
+  font-weight: 700;
+
+  text-align: center;
+}
+
+
+.available-quantity {
+  margin-bottom: 20px;
+
+  color: #8a93a3;
+
+  font-size: 13px;
+
+  text-align: center;
+}
+
+
+/* =========================
+   MODAL ACTION BUTTONS
+========================= */
+
+.item-modal-actions {
+  display: flex;
+
+  gap: 12px;
+
+  margin-top: 25px;
+}
+
+
+.item-modal-actions button {
+  flex: 1;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  gap: 7px;
+
+  padding: 13px 15px;
+
+  border: none;
+  border-radius: 11px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.secondary-modal-button {
+  background: #eef2f8;
+  color: #596579;
+}
+
+
+.primary-modal-button {
+  background: #667fe5;
+  color: white;
+}
+
+
+.primary-modal-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+
+.danger-modal-button {
+  background: #d94b5c;
+  color: white;
+}
+
+
+/* =========================
+   MOVE GUEST
+========================= */
+
+.move-guest-grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(3, 1fr);
+
+  gap: 10px;
+}
+
+
+.move-guest-grid button {
+  min-height: 62px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  gap: 3px;
+
+  padding: 10px;
+
+  border:
+    1px solid #d7dfec;
+
+  border-radius: 11px;
+
+  background: white;
+
+  color: #17233d;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+
+.move-guest-grid button:hover:not(:disabled) {
+  background: #eef3fc;
+}
+
+
+.move-guest-grid button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+
+.move-guest-grid
+.move-guest-selected {
+  border-color: #667fe5;
+
+  background: #e9edff;
+
+  color: #526cd7;
+}
+
+
+.move-guest-grid small {
+  font-size: 10px;
+
+  color: #8a93a3;
+}
+
+
+/* =========================
+   ITEM DETAILS
+========================= */
+
+.item-details-list {
+  border-top:
+    1px solid #e8edf5;
+}
+
+
+.item-detail-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 12px 0;
+
+  border-bottom:
+    1px solid #e8edf5;
+
+  color: #657086;
+
+  font-size: 14px;
+}
+
+
+.item-detail-row strong {
+  color: #17233d;
+}
+
+
+.item-detail-row
+.pending-status {
+  color: #d59a2f;
+}
+
+
+.item-details-close {
+  display: block;
+
+  min-width: 110px;
+
+  margin: 22px auto 0;
+
+  padding: 12px 20px;
+
+  border: none;
+  border-radius: 10px;
+
+  background: #eef2f8;
+
+  color: #17233d;
+
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/* =========================
+   CLICKABLE CHECK ITEMS
+========================= */
+
+.guest-item-clickable {
+  width: 100%;
+
+  border: none;
+
+  background: transparent;
+
+  font-family: inherit;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease;
+}
+
+
+.guest-item-clickable:hover {
+  background: #eef3fc;
+}
+
