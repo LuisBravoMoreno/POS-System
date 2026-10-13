@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import "./MenuScreen.css";
 
+
 import MenuSidebar from "../components/menu/MenuSidebar";
 import CategoryGrid from "../components/menu/CategoryGrid";
 import GuestSelector from "../components/menu/GuestSelector";
@@ -11,7 +12,7 @@ import ItemActionsModal from "../components/menu/ItemActionsModal";
 import RemoveItemModal from "../components/menu/RemoveItemModal";
 import MoveItemModal from "../components/menu/MoveItemModal";
 import ItemDetailsModal from "../components/menu/ItemDetailsModals";
-
+import PaymentModal from "../components/payment/PaymentModal";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -24,7 +25,10 @@ export default function MenuScreen({
   /* =========================
      STATES
   ========================= */
-
+  
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentOrderData, setPaymentOrderData] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
   const [categories, setCategories] =
     useState([]);
 
@@ -978,94 +982,94 @@ export default function MenuScreen({
 
   };
 
-/* =========================
-   HANDLE PAYMENT
-========================= */
+  /* =========================
+     HANDLE PAYMENT
+  ========================= */
 
-const handlePayment = async () => {
+  const handlePayment = async () => {
 
-  try {
+    if (paymentLoading) return;
 
-    setError(null);
+    try {
 
+      setPaymentLoading(true);
+      setError(null);
 
-    /* =========================
-       SEND PENDING PRODUCTS
-    ========================= */
+      /* =========================
+         SEND PENDING PRODUCTS
+      ========================= */
 
-    if (canSendOrder) {
+      if (canSendOrder) {
 
-      const sentSuccessfully =
-        await sendOrder();
+        const sentSuccessfully =
+          await sendOrder();
 
+        if (!sentSuccessfully) {
+          return;
+        }
 
-      if (!sentSuccessfully) {
-        return;
       }
 
-    }
+      /* =========================
+         GET CURRENT ORDER
+      ========================= */
 
+      const orderData =
+        await reloadOrder();
 
-    /* =========================
-       GET CURRENT ORDER
-    ========================= */
+      /* =========================
+         CHECK FOR SENT ITEMS
+      ========================= */
 
-    const orderData =
-      await reloadOrder();
+      const hasSentItems =
+        orderData.guests.some(
+          (guest) =>
+            guest.items.some(
+              (item) =>
+                item.status === "sent"
+            )
+        );
 
+      /* =========================
+         BLOCK EMPTY PAYMENT
+      ========================= */
 
-    /* =========================
-       CHECK FOR SENT ITEMS
-    ========================= */
+      if (!hasSentItems) {
 
-    const hasSentItems =
-      orderData.guests.some(
-        (guest) =>
-          guest.items.some(
-            (item) =>
-              item.status === "sent"
-          )
+        alert(
+          "Cannot process payment. This order has no items."
+        );
+
+        return;
+
+      }
+
+      /* =========================
+         OPEN PAYMENT MODAL
+      ========================= */
+
+      setPaymentOrderData(orderData);
+      setShowPaymentModal(true);
+
+    } catch (error) {
+
+      console.error(
+        "Payment error:",
+        error
       );
 
-
-    /* =========================
-       BLOCK EMPTY PAYMENT
-    ========================= */
-
-    if (!hasSentItems) {
-
-      alert(
-        "Cannot process payment. This order has no items."
+      setError(
+        error.message ||
+        "Could not open payment."
       );
 
-      return;
+    } finally {
+
+      setPaymentLoading(false);
 
     }
 
-
-    /* =========================
-       CLOSE ORDER
-    ========================= */
-
-    await closeOrder();
-
-
-  } catch (error) {
-
-    console.error(
-      "Payment error:",
-      error
-    );
-
-
-    setError(
-      error.message ||
-      "Could not process payment."
-    );
-
-  }
-
-};
+  };
 
 
 /* =========================
@@ -1705,6 +1709,16 @@ const closeOrder = async () => {
 
         )}
 
+        {/* PAYMENT MODAL */}
+        {showPaymentModal && paymentOrderData && (
+          <PaymentModal
+            orderData={paymentOrderData}
+            onClose={() => {
+              setShowPaymentModal(false);
+              setPaymentOrderData(null);
+            }}
+          />
+        )}
 
     </div>
 

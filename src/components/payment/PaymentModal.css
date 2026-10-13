@@ -1,0 +1,254 @@
+.led-payment-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+}
+
+.led-payment-modal {
+  width: min(900px, 100%);
+  max-height: 92vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 24px 65px rgba(15, 23, 42, 0.25);
+  color: #14213d;
+}
+
+.led-payment-header {
+  background: #17365d;
+  color: #ffffff;
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.led-payment-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+}
+
+.led-icon-button {
+  background: transparent;
+  border: 0;
+  color: white;
+  cursor: pointer;
+}
+
+.led-payment-content {
+  padding: 28px;
+}
+
+.led-payment-title h2 {
+  margin: 0;
+  font-size: 25px;
+}
+
+.led-payment-title p {
+  color: #718096;
+  margin: 6px 0 24px;
+}
+
+.led-payment-columns {
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 24px;
+}
+
+.led-payment-guests h3,
+.led-payment-summary h3 {
+  margin: 0 0 16px;
+}
+
+.led-guest-card {
+  background: #f4f7fd;
+  border: 1px solid #e2e9f6;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+}
+
+.led-guest-heading,
+.led-item-row,
+.led-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.led-guest-heading {
+  margin-bottom: 12px;
+}
+
+.led-item-row {
+  font-size: 13px;
+  color: #52627c;
+  margin-top: 8px;
+}
+
+.led-payment-summary {
+  background: #f8faff;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.led-summary-row {
+  margin: 12px 0;
+  font-size: 14px;
+}
+
+.led-payment-summary h4 {
+  margin: 24px 0 12px;
+}
+
+.led-tip-options {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+}
+
+.led-tip-options button {
+  padding: 12px 3px;
+  border: 1px solid #d8e1f0;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+  color: #17365d;
+  font-weight: 600;
+}
+
+.led-tip-options button.selected {
+  background: #3268ed;
+  border-color: #3268ed;
+  color: #ffffff;
+}
+
+.led-custom-tip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.led-custom-tip input {
+  padding: 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 17px;
+}
+
+.led-summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #e8f0ff;
+  color: #174ea6;
+  font-size: 21px;
+}
+
+.led-payment-actions {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.led-payment-actions button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 9px;
+  padding: 16px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 0;
+}
+
+.led-split-button {
+  background: #e5efff;
+  color: #245ab4;
+}
+
+.led-cash-button {
+  background: #35a77d;
+  color: #ffffff;
+}
+
+.led-card-button {
+  background: #3268ed;
+  color: #ffffff;
+}
+
+.led-payment-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.led-method-panel {
+  max-width: 520px;
+  margin: auto;
+}
+
+.led-back-method {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 0;
+  background: transparent;
+  color: #3268ed;
+  cursor: pointer;
+  padding: 0;
+  margin-bottom: 20px;
+}
+
+.led-change {
+  color: #16865d;
+}
+
+.led-warning {
+  color: #d54b57;
+}
+
+.led-card-notice,
+.led-method-footer {
+  padding: 15px;
+  background: #f1f5fb;
+  border-radius: 10px;
+  margin-top: 18px;
+  font-size: 14px;
+}
+
+.led-method-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #52627c;
+}
+
+@media (max-width: 650px) {
+  .led-payment-columns {
+    grid-template-columns: 1fr;
+  }
+
+  .led-payment-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .led-payment-content {
+    padding: 16px;
+  }
+}

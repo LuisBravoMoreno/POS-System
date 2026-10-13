@@ -4,7 +4,8 @@ from app.database import Base, engine
 from app import models
 
 from sqlalchemy.orm import Session
-
+from decimal import Decimal
+from app.payment_calculator import calculate_total
 from app.database import get_db
 from app.models import (
     Category,
@@ -13,8 +14,9 @@ from app.models import (
     OrderGuest,
     OrderItem,
 )
-from app.schemas import OrderCreate, OrderItemCreate, OrderSend, OrderItemVoid, OrderItemMove
+from app.schemas import OrderCreate, OrderSend, OrderItemVoid, OrderItemMove, CashPaymentCreate
 from fastapi.middleware.cors import CORSMiddleware
+from app.models import RestaurantSettings, Payment
 
 
 
@@ -52,7 +54,7 @@ def calculate_subtotal(items):
 # -------------------------
 # Endpoints
 # -------------------------
-  
+
 
 @app.get("/")
 def root():
@@ -108,9 +110,18 @@ def create_order(
     order_data: OrderCreate,
     db: Session = Depends(get_db),
 ):
+    restaurant_id = 1  # Residente: temporal hasta implementar autenticación multi-tenant
+
+    restaurant = db.query(RestaurantSettings).filter(
+        RestaurantSettings.id == restaurant_id
+    ).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant not found.")
+
     existing_order = (
         db.query(Order)
         .filter(
+            Order.restaurant_id == restaurant_id,
             Order.table_number == order_data.table_number,
             Order.status == "open",
         )
@@ -124,6 +135,7 @@ def create_order(
         )
 
     order = Order(
+        restaurant_id=restaurant_id,
         table_number=order_data.table_number,
         guest_count=order_data.guest_count,
         status="open",
@@ -155,7 +167,7 @@ def get_open_orders(
 ):
     open_orders = (
         db.query(Order)
-        .filter(Order.status == "open")
+        .filter(Order.restaurant_id == 1, Order.status == "open")
         .order_by(Order.table_number)
         .all()
     )
@@ -163,7 +175,7 @@ def get_open_orders(
     return open_orders
 
 
-#obtiene la orden con su subtotal
+# Obtener la orden con subtotal, tax, tip y total
 @app.get("/orders/{order_id}")
 def get_order(
     order_id: int,
@@ -182,7 +194,7 @@ def get_order(
             detail="Order not found."
         )
 
-    # 2. Buscar los guests de esta orden
+    # 2. Buscar los guests de la orden
     guests = (
         db.query(OrderGuest)
         .filter(OrderGuest.order_id == order_id)
@@ -215,7 +227,7 @@ def get_order(
             items_data.append({
                 "id": item.id,
                 "product_id": item.product_id,
-                "product_name": product.name,
+                "product_name": product.name if product else None,
                 "quantity": item.quantity,
                 "unit_price": item.unit_price,
                 "status": item.status,
@@ -227,13 +239,35 @@ def get_order(
             "items": items_data,
         })
 
-    # 4. Calcular subtotal de toda la orden
-    order_subtotal = calculate_subtotal(all_order_items)
+    # 4. Obtener configuración del restaurante
+    settings = (
+        db.query(RestaurantSettings)
+        .filter(RestaurantSettings.id == order.restaurant_id)
+        .first()
+    )
 
+    if not settings:
+        raise HTTPException(
+            status_code=404,
+            detail="Restaurant settings not found."
+        )
+
+    # 5. Obtener tasas desde PostgreSQL
+    tax_rate = settings.tax_rate
+    tip_rate = settings.tip_rate
+
+    # 6. Calcular subtotal, tax, tip y total
+    totals = calculate_total(
+        all_order_items,
+        tax_rate=tax_rate,
+        tip_rate=tip_rate,
+    )
+
+    # 7. Devolver la orden y sus totales
     return {
         "order": order,
         "guests": guests_data,
-        "subtotal": order_subtotal,
+        **totals,
     }
 
 
@@ -268,7 +302,7 @@ def send_order(
         raise HTTPException(
             status_code=400,
             detail="No items to send."
-        )    
+        )
 
     created_items = []
 
@@ -523,6 +557,213 @@ def move_order_item(
         "message": "Order item moved successfully."
     }
 
+@app.post("/orders/{order_id}/payments/cash")
+def create_cash_payment(
+    order_id: int,
+    payment_data: CashPaymentCreate,
+    db: Session = Depends(get_db),
+):
+    CENT = Decimal("0.01")
+
+    def money(value):
+        return Decimal(str(value)).quantize(CENT)
+
+    # 1. Lock the order to prevent simultaneous payments
+    order = (
+        db.query(Order)
+        .filter(Order.id == order_id)
+        .with_for_update()
+        .first()
+    )
+
+    if not order:
+        raise HTTPException(
+            status_code=404,
+            detail="Order not found."
+        )
+
+    if order.status != "open":
+        raise HTTPException(
+            status_code=409,
+            detail="Order is not open."
+        )
+
+    # 2. Restaurant settings
+    settings = (
+        db.query(RestaurantSettings)
+        .filter(
+            RestaurantSettings.id == order.restaurant_id
+        )
+        .first()
+    )
+
+    if not settings:
+        raise HTTPException(
+            status_code=404,
+            detail="Restaurant settings not found."
+        )
+
+    # 3. Get sent items
+    items = (
+        db.query(OrderItem)
+        .join(
+            OrderGuest,
+            OrderItem.guest_id == OrderGuest.id
+        )
+        .filter(
+            OrderGuest.order_id == order_id,
+            OrderItem.status == "sent"
+        )
+        .all()
+    )
+
+    totals = calculate_total(
+        items,
+        tax_rate=settings.tax_rate,
+        tip_rate=settings.tip_rate,
+    )
+
+    subtotal = money(totals["subtotal"])
+    tax = money(totals["tax"])
+    tip = money(totals["tip"])
+    order_total = money(totals["total"])
+
+    if order_total <= 0:
+        raise HTTPException(
+            status_code=400,
+            detail="Order has no payable items."
+        )
+
+    # 4. Get completed payments
+    completed_payments = (
+        db.query(Payment)
+        .filter(
+            Payment.order_id == order_id,
+            Payment.status == "completed"
+        )
+        .all()
+    )
+
+    paid_amount = sum(
+        (money(p.total_amount) for p in completed_payments),
+        Decimal("0.00")
+    )
+
+    remaining_balance = money(
+        order_total - paid_amount
+    )
+
+    if remaining_balance <= 0:
+        raise HTTPException(
+            status_code=409,
+            detail="Order is already fully paid."
+        )
+
+    # 5. Validate cash payment
+    amount_to_pay = money(
+        payment_data.amount_to_pay
+    )
+
+    amount_received = money(
+        payment_data.amount_received
+    )
+
+    if amount_to_pay > remaining_balance:
+        raise HTTPException(
+            status_code=400,
+            detail="Payment exceeds remaining balance."
+        )
+
+    if amount_received < amount_to_pay:
+        raise HTTPException(
+            status_code=400,
+            detail="Insufficient cash received."
+        )
+
+    change_amount = money(
+        amount_received - amount_to_pay
+    )
+
+    # 6. Allocate subtotal, tax and tip
+    # across partial payments
+    previous_subtotal = sum(
+        (money(p.subtotal) for p in completed_payments),
+        Decimal("0.00")
+    )
+
+    previous_tax = sum(
+        (money(p.tax_amount) for p in completed_payments),
+        Decimal("0.00")
+    )
+
+    previous_tip = sum(
+        (money(p.tip_amount) for p in completed_payments),
+        Decimal("0.00")
+    )
+
+    if amount_to_pay == remaining_balance:
+        payment_subtotal = money(
+            subtotal - previous_subtotal
+        )
+        payment_tax = money(
+            tax - previous_tax
+        )
+        payment_tip = money(
+            tip - previous_tip
+        )
+    else:
+        payment_tax = money(
+            tax * amount_to_pay / order_total
+        )
+
+        payment_tip = money(
+            tip * amount_to_pay / order_total
+        )
+
+        payment_subtotal = money(
+            amount_to_pay - payment_tax - payment_tip
+        )
+
+    # 7. Save payment
+    payment = Payment(
+        order_id=order.id,
+        payment_method="cash",
+        subtotal=payment_subtotal,
+        tax_amount=payment_tax,
+        tip_amount=payment_tip,
+        total_amount=amount_to_pay,
+        amount_received=amount_received,
+        change_amount=change_amount,
+        status="completed",
+    )
+
+    db.add(payment)
+
+    # 8. Calculate new balance
+    new_balance = money(
+        remaining_balance - amount_to_pay
+    )
+
+    # 9. Close only when fully paid
+    if new_balance == Decimal("0.00"):
+        order.status = "closed"
+
+    # 10. Commit payment and order together
+    db.commit()
+    db.refresh(payment)
+    db.refresh(order)
+
+    return {
+        "message": "Cash payment completed successfully.",
+        "payment_id": payment.id,
+        "order_id": order.id,
+        "payment_method": payment.payment_method,
+        "amount_paid": payment.total_amount,
+        "amount_received": payment.amount_received,
+        "change_amount": payment.change_amount,
+        "remaining_balance": new_balance,
+        "order_status": order.status,
+    }
 
 @app.patch("/orders/{order_id}/close")
 def close_order(
@@ -549,7 +790,35 @@ def close_order(
             detail="Order is already closed."
         )
 
-    # 3. Cerrar la orden
+    # 3. No cerrar una orden sin pago completo.
+    # El cálculo de la cuenta se hace desde los items SENT.
+    settings = db.query(RestaurantSettings).filter(
+        RestaurantSettings.id == order.restaurant_id
+    ).first()
+    if not settings:
+        raise HTTPException(status_code=404, detail="Restaurant settings not found.")
+
+    items = (
+        db.query(OrderItem)
+        .join(OrderGuest, OrderItem.guest_id == OrderGuest.id)
+        .filter(OrderGuest.order_id == order_id, OrderItem.status == "sent")
+        .all()
+    )
+    totals = calculate_total(items, tax_rate=settings.tax_rate, tip_rate=settings.tip_rate)
+    order_total = Decimal(str(totals["total"]))
+    paid = sum(
+        (Decimal(str(payment.total_amount)) for payment in db.query(Payment).filter(
+            Payment.order_id == order_id, Payment.status == "completed"
+        ).all()),
+        Decimal("0.00")
+    )
+    if order_total <= 0 or paid < order_total:
+        raise HTTPException(
+            status_code=409,
+            detail="Order cannot be closed until its full balance is paid."
+        )
+
+    # 4. Cerrar la orden
     order.status = "closed"
 
     db.commit()
@@ -585,6 +854,16 @@ def cancel_order(
         raise HTTPException(
             status_code=409,
             detail="Only an open order can be cancelled."
+        )
+
+    completed_payment = db.query(Payment.id).filter(
+        Payment.order_id == order_id,
+        Payment.status == "completed"
+    ).first()
+    if completed_payment:
+        raise HTTPException(
+            status_code=409,
+            detail="Cannot cancel an order with completed payments. Use a refund workflow."
         )
 
     # 3. Buscar los guests de esta orden

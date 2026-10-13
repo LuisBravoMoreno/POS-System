@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class OrderCreate(BaseModel):
@@ -20,3 +20,23 @@ class OrderItemVoid(BaseModel):
 class OrderItemMove(BaseModel):
     guest_number: int
     quantity: int
+
+# =========================
+# CASH PAYMENT
+# =========================
+
+from decimal import Decimal
+
+
+class CashPaymentCreate(BaseModel):
+    amount_to_pay: Decimal = Field(
+        gt=0,
+        max_digits=10,
+        decimal_places=2
+    )
+
+    amount_received: Decimal = Field(
+        gt=0,
+        max_digits=10,
+        decimal_places=2
+    )

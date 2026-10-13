@@ -14,43 +14,78 @@ from sqlalchemy.orm import relationship
 from app.database import Base
 
 
+# =========================
+# CATEGORY
+# =========================
+
 class Category(Base):
     __tablename__ = "categories"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False, unique=True)
+
+    name = Column(
+        String(100),
+        nullable=False,
+        unique=True
+    )
+
     display_order = Column(Integer, default=0)
+
     is_active = Column(Boolean, default=True)
 
-    products = relationship("Product", back_populates="category")
+    products = relationship(
+        "Product",
+        back_populates="category"
+    )
 
+
+# =========================
+# PRODUCT
+# =========================
 
 class Product(Base):
     __tablename__ = "products"
 
     id = Column(Integer, primary_key=True, index=True)
+
     category_id = Column(
         Integer,
         ForeignKey("categories.id"),
         nullable=False
     )
+
     name = Column(String(150), nullable=False)
+
     price = Column(Numeric(10, 2), nullable=False)
+
     is_active = Column(Boolean, default=True)
 
-    category = relationship("Category", back_populates="products")
-    
+    category = relationship(
+        "Category",
+        back_populates="products"
+    )
+
     order_items = relationship(
         "OrderItem",
         back_populates="product"
     )
-    
 
+
+# =========================
+# ORDER
+# =========================
 
 class Order(Base):
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
+
+    # Restaurant associated with this order
+    restaurant_id = Column(
+        Integer,
+        ForeignKey("restaurant_settings.id"),
+        nullable=False
+    )
 
     table_number = Column(
         Integer,
@@ -74,11 +109,28 @@ class Order(Base):
         server_default=func.now()
     )
 
+    # One order can have multiple guests
     guests = relationship(
         "OrderGuest",
         back_populates="order"
     )
 
+    # One order belongs to one restaurant
+    restaurant = relationship(
+        "RestaurantSettings",
+        back_populates="orders"
+    )
+
+    # One order can have multiple payments
+    payments = relationship(
+        "Payment",
+        back_populates="order"
+    )
+
+
+# =========================
+# ORDER GUEST
+# =========================
 
 class OrderGuest(Base):
     __tablename__ = "order_guests"
@@ -109,6 +161,11 @@ class OrderGuest(Base):
         "OrderItem",
         back_populates="guest"
     )
+
+
+# =========================
+# ORDER ITEM
+# =========================
 
 class OrderItem(Base):
     __tablename__ = "order_items"
@@ -156,4 +213,140 @@ class OrderItem(Base):
     product = relationship(
         "Product",
         back_populates="order_items"
+    )
+
+
+# =========================
+# RESTAURANT SETTINGS
+# =========================
+
+class RestaurantSettings(Base):
+    __tablename__ = "restaurant_settings"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    restaurant_name = Column(
+        String(100),
+        nullable=False
+    )
+
+    country_code = Column(
+        String(2),
+        nullable=False
+    )
+
+    currency = Column(
+        String(3),
+        nullable=False,
+        default="USD"
+    )
+
+    tax_rate = Column(
+        Numeric(6, 3),
+        nullable=False,
+        default=0
+    )
+
+    tip_rate = Column(
+        Numeric(5, 2),
+        nullable=False,
+        default=0
+    )
+
+    tax_included_in_prices = Column(
+        Boolean,
+        nullable=False,
+        default=False
+    )
+
+    # One restaurant can have multiple orders
+    orders = relationship(
+        "Order",
+        back_populates="restaurant"
+    )
+
+
+# =========================
+# PAYMENT
+# =========================
+
+class Payment(Base):
+    __tablename__ = "payments"
+
+    id = Column(
+        Integer,
+        primary_key=True,
+        index=True
+    )
+
+    # Payment belongs to an order
+    order_id = Column(
+        Integer,
+        ForeignKey("orders.id"),
+        nullable=False
+    )
+
+    # cash or card
+    payment_method = Column(
+        String(20),
+        nullable=False
+    )
+
+    # Amounts allocated to this payment
+    subtotal = Column(
+        Numeric(10, 2),
+        nullable=False,
+        default=0
+    )
+
+    tax_amount = Column(
+        Numeric(10, 2),
+        nullable=False,
+        default=0
+    )
+
+    tip_amount = Column(
+        Numeric(10, 2),
+        nullable=False,
+        default=0
+    )
+
+    # Amount paid in this transaction
+    total_amount = Column(
+        Numeric(10, 2),
+        nullable=False
+    )
+
+    # Cash payment information
+    amount_received = Column(
+        Numeric(10, 2),
+        nullable=True
+    )
+
+    change_amount = Column(
+        Numeric(10, 2),
+        nullable=True
+    )
+
+    # pending, completed, failed, refunded
+    status = Column(
+        String(20),
+        nullable=False,
+        default="completed"
+    )
+
+    created_at = Column(
+        DateTime(timezone=True),
+        nullable=False,
+        server_default=func.now()
+    )
+
+    # Many payments can belong to one order
+    order = relationship(
+        "Order",
+        back_populates="payments"
     )
