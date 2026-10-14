@@ -1,0 +1,184 @@
+/* =====================================
+   L-ED SYSTEM - PAYMENT SUCCESS
+===================================== */
+
+.led-success-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: rgba(15, 23, 42, 0.55);
+}
+
+.led-success-modal {
+  width: min(460px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 18px;
+  box-shadow: 0 24px 65px rgba(15, 23, 42, 0.25);
+  color: #17365d;
+}
+
+.led-success-header {
+  padding: 18px 24px;
+  background: #17365d;
+  color: #ffffff;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.led-success-content {
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.led-success-icon {
+  display: flex;
+  justify-content: center;
+  color: #16865d;
+}
+
+.led-success-content h2 {
+  margin: 0;
+  text-align: center;
+  color: #16865d;
+  font-size: 25px;
+}
+
+.led-success-order {
+  margin: 0;
+  text-align: center;
+  color: #718096;
+}
+
+.led-success-status {
+  align-self: center;
+  padding: 7px 14px;
+  border-radius: 20px;
+  background: #e5f5ec;
+  color: #16865d;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.led-success-details {
+  padding: 18px;
+  background: #f3f6fd;
+  border-radius: 12px;
+}
+
+.led-success-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  font-size: 14px;
+}
+
+.led-success-row:last-child {
+  margin-bottom: 0;
+}
+
+.led-success-row span {
+  color: #52627c;
+}
+
+.led-success-divider {
+  height: 1px;
+  margin: 14px 0;
+  background: #d8e1f0;
+}
+
+.led-success-change {
+  color: #16865d;
+  font-size: 20px;
+}
+
+.led-success-balance {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #e8f0ff;
+  color: #174ea6;
+  font-size: 17px;
+}
+
+.led-success-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.led-success-actions button {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.led-success-print {
+  background: #e8f0ff;
+  color: #174ea6;
+}
+
+.led-success-done {
+  background: #35a77d;
+  color: #ffffff;
+}
+
+.led-success-actions button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .led-success-content {
+    padding: 20px;
+  }
+
+  .led-success-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* COMPACT PAYMENT SUCCESS */
+
+.led-success-content {
+  padding: 20px 28px;
+  gap: 12px;
+}
+
+.led-success-header {
+  padding: 14px 24px;
+}
+
+.led-success-details {
+  padding: 14px 18px;
+}
+
+.led-success-row {
+  margin-bottom: 10px;
+}
+
+.led-success-balance {
+  padding: 13px 16px;
+}
+
+.led-success-modal {
+  max-height: calc(100dvh - 32px);
+}

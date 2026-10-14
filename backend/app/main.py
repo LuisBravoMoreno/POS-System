@@ -13,6 +13,7 @@ from app.models import (
     Order,
     OrderGuest,
     OrderItem,
+    Payment
 )
 from app.schemas import OrderCreate, OrderSend, OrderItemVoid, OrderItemMove, CashPaymentCreate
 from fastapi.middleware.cors import CORSMiddleware
@@ -263,11 +264,48 @@ def get_order(
         tip_rate=tip_rate,
     )
 
-    # 7. Devolver la orden y sus totales
+    # 7. Obtener todos los pagos completados de la orden
+    completed_payments = (
+        db.query(Payment)
+        .filter(
+            Payment.order_id == order_id,
+            Payment.status == "completed",
+        )
+        .all()
+    )
+
+    # 8. Calcular el importe total pagado
+    paid_amount = sum(
+        (
+            Decimal(str(payment.total_amount))
+            for payment in completed_payments
+        ),
+        Decimal("0.00")
+    )
+
+    # 9. Calcular el saldo pendiente
+    order_total = Decimal(str(totals["total"]))
+
+    remaining_balance = (
+        order_total - paid_amount
+    ).quantize(Decimal("0.01"))
+
+    # 10. Determinar el estado del pago
+    if paid_amount == 0:
+        payment_status = "unpaid"
+    elif remaining_balance > 0:
+        payment_status = "partially_paid"
+    else:
+        payment_status = "paid"
+
+    # 11. Devolver la orden con sus totales y pagos
     return {
         "order": order,
         "guests": guests_data,
         **totals,
+        "paid_amount": paid_amount,
+        "remaining_balance": remaining_balance,
+        "payment_status": payment_status,
     }
 
 
@@ -679,6 +717,17 @@ def create_cash_payment(
             status_code=400,
             detail="Insufficient cash received."
         )
+    if amount_to_pay <= Decimal("0.00"):
+        raise HTTPException(
+            status_code=400,
+            detail="Payment amount must be greater than zero."
+    )
+
+    if amount_received < Decimal("0.00"):
+        raise HTTPException(
+            status_code=400,
+            detail="Amount received cannot be negative."
+    )
 
     change_amount = money(
         amount_received - amount_to_pay

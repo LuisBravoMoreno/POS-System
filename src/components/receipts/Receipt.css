@@ -1,0 +1,304 @@
+/* =====================================
+   KITCHEN RECEIPT - 80MM
+===================================== */
+
+.receipt {
+  width: 80mm;
+  max-width: 100%;
+  box-sizing: border-box;
+  padding: 5mm;
+  background: #ffffff;
+  color: #000000;
+  font-family: "Courier New", monospace;
+  font-size: 14px;
+  line-height: 1.5;
+  flex-shrink: 0;
+}
+
+/* HEADER */
+
+.receipt-header {
+  text-align: center;
+}
+
+.receipt-logo {
+  display: block;
+  width: 38mm;
+  max-width: 100%;
+  height: auto;
+  margin: 0 auto 3mm;
+}
+
+.receipt-header h1 {
+  font-family: Arial, sans-serif;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 2mm 0;
+}
+
+.receipt-header h2 {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  margin: 3mm 0 6mm;
+}
+
+/* ORDER INFORMATION */
+
+.receipt-order-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 3mm;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+.receipt-date {
+  text-align: center;
+  margin: 4mm 0;
+  font-size: 12px;
+}
+
+/* DIVIDERS */
+
+.receipt-divider {
+  border-top: 1px dashed #000;
+  margin: 5mm 0;
+}
+
+/* GUESTS */
+
+.receipt-guest h3 {
+  font-size: 17px;
+  font-weight: 800;
+  text-align: left;
+  margin: 0 0 12px;
+}
+
+/* PRODUCTS */
+
+.receipt-item {
+  display: flex;
+  gap: 12px;
+  font-size: 15px;
+  margin-bottom: 10px;
+}
+
+.receipt-item span:first-child {
+  min-width: 28px;
+  flex-shrink: 0;
+  font-weight: bold;
+}
+
+.receipt-item span:last-child {
+  overflow-wrap: anywhere;
+}
+
+/* FOOTER */
+
+.receipt-footer {
+  text-align: center;
+  font-weight: bold;
+  font-size: 13px;
+  margin-top: 6mm;
+}
+
+/* =====================================
+   PREVIEW MODAL
+===================================== */
+
+.kitchen-preview-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.65);
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+.kitchen-preview-modal {
+  background: #ffffff;
+  border-radius: 12px;
+
+  width: min(100%, 440px);
+  max-height: 90vh;
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+  padding: 0;
+
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.25);
+}
+
+.kitchen-preview-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+}
+
+/* ACTION BUTTONS */
+
+.kitchen-preview-actions {
+  flex-shrink: 0;
+
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+
+  padding: 16px;
+  background: white;
+  border-top: 1px solid #ddd;
+  margin-top: 0;
+}
+
+.kitchen-preview-actions button {
+  border: none;
+  border-radius: 8px;
+
+  padding: 12px 16px;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.kitchen-preview-actions button:first-child {
+  background: #e9edf3;
+  color: #1d3557;
+}
+
+.kitchen-preview-actions button:last-child {
+  background: #1d3557;
+  color: white;
+}
+
+.kitchen-preview-actions button:hover {
+  opacity: 0.9;
+}
+
+/* =====================================
+   PRINT KITCHEN RECEIPT - 80MM
+===================================== */
+
+@media print {
+
+  @page {
+    size: 80mm 200mm;
+    margin: 0;
+  }
+
+  html,
+  body,
+  #root {
+    width: 80mm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Hide the rest of the application */
+
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Show receipt and its containers */
+
+  .kitchen-preview-overlay,
+  .kitchen-preview-modal,
+  .kitchen-preview-scroll,
+  .kitchen-receipt,
+  .kitchen-receipt * {
+    visibility: visible !important;
+  }
+
+  /* Remove the dark overlay */
+
+  .kitchen-preview-overlay {
+    position: fixed !important;
+    inset: 0 !important;
+    z-index: 99999 !important;
+    display: block !important;
+    width: 80mm !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: white !important;
+  }
+
+  /* Remove modal styling */
+
+  .kitchen-preview-modal {
+    position: static !important;
+    display: block !important;
+    width: 80mm !important;
+    max-width: none !important;
+    max-height: none !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  /* Remove scroll container styling */
+
+  .kitchen-preview-scroll {
+    display: block !important;
+    width: 80mm !important;
+    height: auto !important;
+    max-height: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* Actual printed ticket */
+
+  .kitchen-receipt {
+    display: block !important;
+    width: 80mm !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 5mm !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Hide preview buttons */
+
+  .kitchen-preview-actions,
+  .kitchen-preview-actions * {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  /* Prevent items from being split */
+
+  .receipt-guest,
+  .receipt-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+}

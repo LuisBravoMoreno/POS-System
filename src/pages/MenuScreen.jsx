@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./MenuScreen.css";
 
-
+import PaymentSuccess from "../components/payment/PaymentSuccess";
 import MenuSidebar from "../components/menu/MenuSidebar";
 import CategoryGrid from "../components/menu/CategoryGrid";
 import GuestSelector from "../components/menu/GuestSelector";
@@ -13,6 +13,7 @@ import RemoveItemModal from "../components/menu/RemoveItemModal";
 import MoveItemModal from "../components/menu/MoveItemModal";
 import ItemDetailsModal from "../components/menu/ItemDetailsModals";
 import PaymentModal from "../components/payment/PaymentModal";
+import KitchenReceipt from "../components/receipts/KitchenReceipt";
 
 const API_URL = "http://127.0.0.1:8000";
 
@@ -25,7 +26,13 @@ export default function MenuScreen({
   /* =========================
      STATES
   ========================= */
-  
+  const [showKitchenReceipt, setShowKitchenReceipt] =
+  useState(false);
+
+const [kitchenReceiptData, setKitchenReceiptData] =
+  useState(null);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [paymentSuccessData, setPaymentSuccessData] = useState(null);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [paymentOrderData, setPaymentOrderData] = useState(null);
   const [paymentLoading, setPaymentLoading] = useState(false);
@@ -947,21 +954,43 @@ export default function MenuScreen({
          RELOAD FROM DATABASE
       ========================= */
 
-      await reloadOrder();
+      const updatedOrder = await reloadOrder();
 
+      const receiptGuests = Object.entries(
+        pendingGuestOrders
+      ).map(([guestNumber, products]) => {
+      const groupedProducts = {};
 
-      /*
-        Solamente limpiamos los pending
-        después de confirmar que el
-        backend guardó correctamente.
-      */
+      products.forEach((product) => {
+        if (!groupedProducts[product.id]) {
+          groupedProducts[product.id] = {
+            id: product.id,
+            product_name: product.name,
+            quantity: 0,
+            status: "sent",
+          };
+        }
 
-      setPendingGuestOrders(
-        {}
-      );
+        groupedProducts[product.id].quantity += 1;
+      });
 
-      return true;
+      return {
+        id: Number(guestNumber),
+        guest_number: Number(guestNumber),
+        items: Object.values(groupedProducts),
+      };
+    }).filter((guest) => guest.items.length > 0);
 
+    setKitchenReceiptData({
+      order: updatedOrder.order,
+      guests: receiptGuests,
+    });
+
+    setShowKitchenReceipt(true);
+
+    setPendingGuestOrders({});
+
+    return true;
 
     } catch (error) {
 
@@ -986,91 +1015,142 @@ export default function MenuScreen({
      HANDLE PAYMENT
   ========================= */
 
-  const handlePayment = async () => {
+const handlePayment = async () => {
 
-    if (paymentLoading) return;
+  if (paymentLoading) return;
 
-    try {
+  try {
 
-      setPaymentLoading(true);
-      setError(null);
+    setPaymentLoading(true);
+    setError(null);
 
-      /* =========================
-         SEND PENDING PRODUCTS
-      ========================= */
+    /* =========================
+        SEND PENDING PRODUCTS
+    ========================= */
 
-      if (canSendOrder) {
+    if (canSendOrder) {
 
-        const sentSuccessfully =
-          await sendOrder();
+      const sentSuccessfully =
+        await sendOrder();
 
-        if (!sentSuccessfully) {
-          return;
-        }
-
-      }
-
-      /* =========================
-         GET CURRENT ORDER
-      ========================= */
-
-      const orderData =
-        await reloadOrder();
-
-      /* =========================
-         CHECK FOR SENT ITEMS
-      ========================= */
-
-      const hasSentItems =
-        orderData.guests.some(
-          (guest) =>
-            guest.items.some(
-              (item) =>
-                item.status === "sent"
-            )
-        );
-
-      /* =========================
-         BLOCK EMPTY PAYMENT
-      ========================= */
-
-      if (!hasSentItems) {
-
-        alert(
-          "Cannot process payment. This order has no items."
-        );
-
+      if (!sentSuccessfully) {
         return;
-
       }
-
-      /* =========================
-         OPEN PAYMENT MODAL
-      ========================= */
-
-      setPaymentOrderData(orderData);
-      setShowPaymentModal(true);
-
-    } catch (error) {
-
-      console.error(
-        "Payment error:",
-        error
-      );
-
-      setError(
-        error.message ||
-        "Could not open payment."
-      );
-
-    } finally {
-
-      setPaymentLoading(false);
 
     }
 
-  };
+    /* =========================
+        GET CURRENT ORDER
+    ========================= */
 
+    const orderData =
+      await reloadOrder();
+
+    /* =========================
+        CHECK FOR SENT ITEMS
+    ========================= */
+
+    const hasSentItems =
+      orderData.guests.some(
+        (guest) =>
+          guest.items.some(
+            (item) =>
+              item.status === "sent"
+          )
+      );
+
+    /* =========================
+        BLOCK EMPTY PAYMENT
+    ========================= */
+
+    if (!hasSentItems) {
+
+      alert(
+        "Cannot process payment. This order has no items."
+      );
+
+        return;
+
+    }
+
+    /* =========================
+        OPEN PAYMENT MODAL
+    ========================= */
+
+    setPaymentOrderData(orderData);
+    setShowPaymentModal(true);
+
+  } catch (error) {
+
+    console.error(
+      "Payment error:",
+      error
+    );
+
+    setError(
+      error.message ||
+      "Could not open payment."
+    );
+
+  } finally {
+
+    setPaymentLoading(false);
+
+  }
+
+};
+
+
+/* =========================
+   HANDLE CASH PAYMENT SUCCESS
+========================= */
+
+const handleCashPaymentSuccess = async (paymentResult) => {
+  try {
+    setError(null);
+
+    console.log("Cash payment completed:", paymentResult);
+
+    // The payment has already been saved in PostgreSQL.
+    // Close PaymentModal and display PaymentSuccess.
+    setShowPaymentModal(false);
+    setPaymentOrderData(null);
+
+    setPaymentSuccessData({
+      ...paymentResult,
+      orderNumber: paymentResult.order_id,
+      tableNumber: table.id,
+    });
+
+    setShowPaymentSuccess(true);
+
+    // Refresh the order only if it remains open.
+    if (paymentResult.order_status !== "closed") {
+      await reloadOrder();
+    }
+  } catch (error) {
+    console.error("Error refreshing after payment:", error);
+
+    // Payment was already recorded. Keep the success screen.
+    setError(
+      "Payment was recorded, but the order could not be refreshed."
+    );
+  }
+};
+/* =========================
+    CLOSE SUCCESS SCREEN
+========================= */
+
+const handlePaymentSuccessDone = () => {
+  const isClosed = paymentSuccessData?.order_status === "closed";
+
+  setShowPaymentSuccess(false);
+  setPaymentSuccessData(null);
+
+  if (isClosed) {
+    onBack();
+  }
+};
 
 /* =========================
     CANCEL ORDER
@@ -1713,6 +1793,7 @@ const closeOrder = async () => {
         {showPaymentModal && paymentOrderData && (
           <PaymentModal
             orderData={paymentOrderData}
+            onPaymentSuccess={handleCashPaymentSuccess}
             onClose={() => {
               setShowPaymentModal(false);
               setPaymentOrderData(null);
@@ -1720,6 +1801,47 @@ const closeOrder = async () => {
           />
         )}
 
+        {/* PAYMENT SUCCESS MODAL */}
+        {showPaymentSuccess && paymentSuccessData && (
+          <PaymentSuccess
+            paymentResult={paymentSuccessData}
+            orderNumber={paymentSuccessData.orderNumber}
+            tableNumber={paymentSuccessData.tableNumber}
+            onDone={handlePaymentSuccessDone}
+          />
+        )}
+
+        {showKitchenReceipt && kitchenReceiptData && (
+          <div className="kitchen-preview-overlay">
+            <div className="kitchen-preview-modal">
+
+              <div className="kitchen-preview-scroll">
+                <KitchenReceipt
+                  orderData={kitchenReceiptData}
+                />
+              </div>
+
+              <div className="kitchen-preview-actions">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowKitchenReceipt(false);
+                    setKitchenReceiptData(null);
+                  }}
+                >
+                  Close Preview
+                </button>
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                >
+                 Print Kitchen Order  
+                </button>
+
+              </div>
+            </div>
+          </div>
+        )}
     </div>
 
   );
