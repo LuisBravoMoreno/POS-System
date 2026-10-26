@@ -1,19 +1,22 @@
 import { useEffect, useState } from "react";
 import "./RestaurantDashboard.css";
 
+import CreateOrder from "./CreateOrder";
+import TablesView from "./TablesView";
+import OrdersHistory from "./OrdersHistory";
+
 import Sidebar from "../components/Sidebar";
-import TableCard from "../components/TableCard";
 import GuestModal from "../components/GuestModal";
+import TakeoutOrderModal from "../components/TakeoutOrderModal";
+
 import MenuScreen from "./MenuScreen";
 
-
 const API_URL = "http://127.0.0.1:8000";
-
 
 export default function RestaurantDashboard() {
 
   /* =========================
-     TABLES
+     TABLES STATE
   ========================= */
 
   const [tables, setTables] = useState(
@@ -31,14 +34,30 @@ export default function RestaurantDashboard() {
   const [guestCount, setGuestCount] =
     useState("");
 
-  // Controla qué pantalla mostrar
-  const [view, setView] =
-    useState("tables");
+  /* =========================
+     NAVIGATION STATE
+  ========================= */
 
-  // Mesa que actualmente está siendo atendida
-  const [activeTable, setActiveTable] =
+  const [view, setView] =
+    useState("create-order");
+
+  const [activeSection, setActiveSection] =
+    useState("create-order");
+
+  const [activeOrder, setActiveOrder] =
     useState(null);
 
+  const [menuReturnView, setMenuReturnView] = useState(null);
+
+  /* =========================
+     TAKEOUT STATE
+  ========================= */
+
+  const [takeoutModalOpen, setTakeoutModalOpen] =
+    useState(false);
+
+  const [takeoutSubmitting, setTakeoutSubmitting] =
+    useState(false);
 
   /* =========================
      LOAD OPEN ORDERS
@@ -46,16 +65,9 @@ export default function RestaurantDashboard() {
 
   useEffect(() => {
 
-    /*
-      Solamente buscamos las órdenes
-      abiertas cuando estamos en la
-      pantalla de Tables.
-    */
-
     if (view !== "tables") {
       return;
     }
-
 
     const loadOpenOrders = async () => {
 
@@ -65,78 +77,40 @@ export default function RestaurantDashboard() {
           `${API_URL}/orders/open`
         );
 
-
         if (!response.ok) {
-
           throw new Error(
             `HTTP error: ${response.status}`
           );
-
         }
 
-
-        const openOrders =
-          await response.json();
-
+        const openOrders = await response.json();
 
         setTables((currentTables) =>
           currentTables.map((table) => {
 
-            /*
-              Buscamos si esta mesa tiene
-              actualmente una orden OPEN.
-            */
-
-            const openOrder =
-              openOrders.find(
-                (order) =>
-                  order.table_number ===
-                  table.id
-              );
-
-
-            /*
-              Si encontramos una orden
-              abierta para esta mesa,
-              la mesa está OCCUPIED.
-            */
+            const openOrder = openOrders.find(
+              (order) =>
+                order.table_number === table.id
+            );
 
             if (openOrder) {
-
               return {
                 ...table,
-
                 occupied: true,
-
-                guests:
-                  openOrder.guest_count,
-
-                orderId:
-                  openOrder.id,
+                guests: openOrder.guest_count,
+                orderId: openOrder.id,
               };
-
             }
-
-
-            /*
-              Si NO encontramos una orden
-              abierta para esta mesa,
-              la mesa está AVAILABLE.
-            */
 
             return {
               ...table,
-
               occupied: false,
-
               guests: 0,
-
               orderId: null,
             };
 
           })
         );
-
 
       } catch (error) {
 
@@ -149,12 +123,114 @@ export default function RestaurantDashboard() {
 
     };
 
-
     loadOpenOrders();
-
 
   }, [view]);
 
+  /* =========================
+     SIDEBAR NAVIGATION
+  ========================= */
+
+  const handleSidebarNavigate = (section) => {
+
+    setActiveSection(section);
+
+    if (section === "create-order") {
+      setView("create-order");
+      setSelectedTable(null);
+      setGuestCount("");
+      setTakeoutModalOpen(false);
+    }
+
+    if (section === "orders-history" || section === "order-history" || section === "ordersHistory" || section === "orderHistory") {
+      setView("orders-history");
+      setTakeoutModalOpen(false);
+      setSelectedTable(null);
+    }
+  };
+
+  /* =========================
+     ORDER TYPE SELECTION
+  ========================= */
+
+  const handleSelectTables = () => {
+    setTakeoutModalOpen(false);
+    setView("tables");
+  };
+
+  const handleSelectTakeout = () => {
+    setTakeoutModalOpen(true);
+  };
+
+  /* =========================
+     TAKEOUT MODAL ACTIONS
+  ========================= */
+
+  const handleCloseTakeoutModal = () => {
+    if (takeoutSubmitting) return;
+    setTakeoutModalOpen(false);
+  };
+
+  const handleTakeoutContinue = async (customerName) => {
+    if (takeoutSubmitting) return;
+
+    const trimmedName = customerName.trim();
+    if (!trimmedName) {
+      window.alert("Customer name is required.");
+      return;
+    }
+
+    setTakeoutSubmitting(true);
+
+    try {
+      const response = await fetch(`${API_URL}/orders`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          order_type: "takeout",
+          customer_name: trimmedName,
+          table_number: null,
+          guest_count: 1,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => null);
+        const detail = errorData?.detail;
+        throw new Error(
+          typeof detail === "string"
+            ? detail
+            : `Could not create order (HTTP ${response.status}).`
+        );
+      }
+
+      const newOrder = await response.json();
+      if (newOrder.id == null) {
+        throw new Error("Server response did not include an order ID.");
+      }
+
+      console.log("New takeout order created:", newOrder);
+
+      // Keep the MenuScreen 'table' prop compatible with existing code.
+      setMenuReturnView(null);
+      setActiveOrder({
+        id: null,
+        orderType: "takeout",
+        tableNumber: null,
+        customerName: trimmedName,
+        guests: 1,
+        orderId: newOrder.id,
+      });
+
+      setTakeoutModalOpen(false);
+      setView("menu");
+    } catch (error) {
+      console.error("Error creating takeout order:", error);
+      window.alert(error.message || "Could not create takeout order.");
+    } finally {
+      setTakeoutSubmitting(false);
+    }
+  };
 
   /* =========================
      TABLE CLICK
@@ -166,6 +242,9 @@ export default function RestaurantDashboard() {
       (t) => t.id === id
     );
 
+    if (!table) {
+      return;
+    }
 
     // -------------------------
     // AVAILABLE TABLE
@@ -174,13 +253,10 @@ export default function RestaurantDashboard() {
     if (!table.occupied) {
 
       setSelectedTable(id);
-
       setGuestCount("");
 
       return;
-
     }
-
 
     // -------------------------
     // OCCUPIED TABLE
@@ -192,41 +268,31 @@ export default function RestaurantDashboard() {
         `${API_URL}/orders/${table.orderId}`
       );
 
-
       if (!response.ok) {
-
         throw new Error(
           `HTTP error: ${response.status}`
         );
-
       }
 
+      const orderData = await response.json();
 
-      const orderData =
-        await response.json();
-
-
-      // Temporal para verificar
-      // la información recibida
       console.log(
         "Existing order:",
         orderData
       );
 
-
-      // Guardamos la mesa activa
-      // junto con su orden existente
-      setActiveTable({
+      setMenuReturnView(null);
+      setActiveOrder({
         id: table.id,
+        orderType: "dine_in",
+        tableNumber: table.id,
+        customerName: null,
         guests: table.guests,
         orderId: table.orderId,
         order: orderData,
       });
 
-
-      // Abrimos MenuScreen
       setView("menu");
-
 
     } catch (error) {
 
@@ -239,29 +305,29 @@ export default function RestaurantDashboard() {
 
   };
 
-
   /* =========================
      CONFIRM GUESTS
   ========================= */
 
   const confirmGuests = async () => {
 
+    if (!guestCount || !selectedTable) {
+      return;
+    }
+
+    const guests = Number(guestCount);
+
     if (
-      !guestCount ||
-      !selectedTable
+      !Number.isInteger(guests) ||
+      guests < 1
     ) {
       return;
     }
 
-
-    const guests =
-      Number(guestCount);
-
-
     try {
 
       /* -------------------------
-         CREATE ORDER IN BACKEND
+         CREATE DINE-IN ORDER
       ------------------------- */
 
       const response = await fetch(
@@ -270,42 +336,32 @@ export default function RestaurantDashboard() {
           method: "POST",
 
           headers: {
-            "Content-Type":
-              "application/json",
+            "Content-Type": "application/json",
           },
 
           body: JSON.stringify({
-            table_number:
-              selectedTable,
-
-            guest_count:
-              guests,
+            order_type: "dine_in",
+            table_number: selectedTable,
+            guest_count: guests,
           }),
         }
       );
 
-
       if (!response.ok) {
-
         throw new Error(
           `HTTP error: ${response.status}`
         );
-
       }
 
-
-      const newOrder =
-        await response.json();
-
+      const newOrder = await response.json();
 
       console.log(
-        "New order created:",
+        "New dine-in order created:",
         newOrder
       );
 
-
       /* -------------------------
-         UPDATE TABLE IN REACT
+         UPDATE TABLE
       ------------------------- */
 
       setTables((currentTables) =>
@@ -313,57 +369,51 @@ export default function RestaurantDashboard() {
           table.id === selectedTable
             ? {
                 ...table,
-
                 occupied: true,
-
                 guests: guests,
-
-                orderId:
-                  newOrder.id,
+                orderId: newOrder.id,
               }
             : table
         )
       );
 
-
       /* -------------------------
          SET ACTIVE TABLE
       ------------------------- */
 
-      setActiveTable({
+      setMenuReturnView(null);
+      setActiveOrder({
         id: selectedTable,
+        orderType: "dine_in",
+        tableNumber: selectedTable,
+        customerName: null,
         guests: guests,
         orderId: newOrder.id,
       });
 
-
       /* -------------------------
-         CLEAN MODAL
+         RESET GUEST MODAL
       ------------------------- */
 
       setSelectedTable(null);
-
       setGuestCount("");
 
-
       /* -------------------------
-         OPEN MENU
+         OPEN MENU SCREEN
       ------------------------- */
 
       setView("menu");
 
-
     } catch (error) {
 
       console.error(
-        "Error creating order:",
+        "Error creating dine-in order:",
         error
       );
 
     }
 
   };
-
 
   /* =========================
      GUEST KEYPAD
@@ -378,121 +428,142 @@ export default function RestaurantDashboard() {
 
   };
 
-
   const clearGuests = () => {
-
     setGuestCount("");
-
   };
 
+  /* =========================
+     CLOSE GUEST MODAL
+  ========================= */
+
+  const closeGuestModal = () => {
+    setSelectedTable(null);
+    setGuestCount("");
+  };
+
+  /* =========================
+     REOPEN FROM ORDERS HISTORY
+  ========================= */
+
+  const handleOpenHistoryOrder = async (summary) => {
+    const response = await fetch(`${API_URL}/orders/${summary.id}`);
+    if (!response.ok) {
+      throw new Error(`Could not load order #${summary.id} (HTTP ${response.status}).`);
+    }
+    const orderData = await response.json();
+    const order = orderData.order;
+    if (!order || order.status !== "open") {
+      throw new Error("This order is no longer open. Refresh the history.");
+    }
+    setMenuReturnView("orders-history");
+    setActiveOrder({
+      id: order.order_type === "dine_in" ? order.table_number : null,
+      orderType: order.order_type,
+      tableNumber: order.table_number,
+      customerName: order.customer_name,
+      guests: order.guest_count,
+      orderId: order.id,
+      order: orderData,
+    });
+    setView("menu");
+  };
 
   /* =========================
      MENU SCREEN
   ========================= */
 
-  if (
-    view === "menu" &&
-    activeTable
-  ) {
+  if (view === "menu" && activeOrder) {
 
     return (
-
       <MenuScreen
-
-        table={
-          activeTable
-        }
-
-        onBack={() =>
-          setView("tables")
-        }
-
+        table={activeOrder}
+        onBack={() => {
+          const destination = menuReturnView || (
+            activeOrder.orderType === "takeout" ? "create-order" : "tables"
+          );
+          setView(destination);
+          setActiveSection(destination === "orders-history" ? "orders-history" : "create-order");
+          setActiveOrder(null);
+          setMenuReturnView(null);
+        }}
       />
-
     );
 
   }
 
-
   /* =========================
-     TABLE SCREEN
+     DASHBOARD
   ========================= */
 
   return (
 
     <div className="dashboard-container">
 
-      <Sidebar />
+      {/* SIDEBAR */}
 
+      <Sidebar
+        activeSection={activeSection}
+        onNavigate={handleSidebarNavigate}
+      />
+
+      {/* MAIN CONTENT */}
 
       <main className="dashboard-main">
 
-        <h1 className="page-title">
-          TABLES
-        </h1>
+        {/* CREATE ORDER */}
 
+        {view === "create-order" && (
+          <CreateOrder
+            onSelectTables={handleSelectTables}
+            onSelectTakeout={handleSelectTakeout}
+          />
+        )}
 
-        <div className="tables-container">
+        {/* TABLES */}
 
-          {tables.map((table) => (
+        {view === "tables" && (
+          <TablesView
+            tables={tables}
+            onTableClick={handleTableClick}
+          />
+        )}
 
-            <TableCard
+        {/* ORDERS HISTORY */}
+        {view === "orders-history" && (
+          <OrdersHistory onOpenOrder={handleOpenHistoryOrder} />
+        )}
 
-              key={
-                table.id
-              }
-
-              table={
-                table
-              }
-
-              onClick={
-                handleTableClick
-              }
-
-            />
-
-          ))}
-
-        </div>
+        {/* TAKEOUT uses the shared MenuScreen after creation. */}
 
       </main>
 
+      {/* =========================
+          TAKEOUT ORDER MODAL
+      ========================= */}
+
+      {takeoutModalOpen && (
+        <TakeoutOrderModal
+          onClose={handleCloseTakeoutModal}
+          onContinue={handleTakeoutContinue}
+        />
+      )}
 
       {/* =========================
           GUEST MODAL
       ========================= */}
 
-      {selectedTable && (
-
+      {selectedTable && view === "tables" && (
         <GuestModal
-
-          selectedTable={
-            selectedTable
-          }
-
-          guestCount={
-            guestCount
-          }
-
-          addDigit={
-            addDigit
-          }
-
-          clearGuests={
-            clearGuests
-          }
-
-          confirmGuests={
-            confirmGuests
-          }
-
+          selectedTable={selectedTable}
+          guestCount={guestCount}
+          addDigit={addDigit}
+          clearGuests={clearGuests}
+          confirmGuests={confirmGuests}
+          onClose={closeGuestModal}
         />
-
       )}
 
     </div>
 
   );
-
 }

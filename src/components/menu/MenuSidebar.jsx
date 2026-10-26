@@ -11,6 +11,8 @@ export default function MenuSidebar({
   onItemClick,
 }) {
 
+  const isTakeout = table.orderType === "takeout";
+
   return (
 
     <aside className="menu-sidebar">
@@ -39,38 +41,46 @@ export default function MenuSidebar({
 
         <div className="order-details">
 
-          <div className="detail-item">
+          {isTakeout ? (
+            <>
+              {/* TAKEOUT ORDER */}
+              <div className="detail-item">
+                <span className="detail-label">Order</span>
+                <span className="detail-value">#{table.orderId}</span>
+              </div>
 
-            <span className="detail-label">
-              Table
-            </span>
+              <div className="detail-divider"></div>
 
-            <span className="detail-value">
-              {table.id}
-            </span>
+              <div className="detail-item">
+                <span className="detail-label">Type</span>
+                <span className="detail-value">To Go</span>
+              </div>
 
-          </div>
+              <div className="detail-divider"></div>
 
+              <div className="detail-item">
+                <span className="detail-label">Customer</span>
+                <span className="detail-value">{table.customerName}</span>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* DINE-IN ORDER */}
+              <div className="detail-item">
+                <span className="detail-label">Table</span>
+                <span className="detail-value">{table.id}</span>
+              </div>
 
-          <div className="detail-divider">
-          </div>
+              <div className="detail-divider"></div>
 
-
-          <div className="detail-item">
-
-            <span className="detail-label">
-
-              {table.guests === 1
-                ? "Guest"
-                : "Guests"}
-
-            </span>
-
-            <span className="detail-value">
-              {table.guests}
-            </span>
-
-          </div>
+              <div className="detail-item">
+                <span className="detail-label">
+                  {table.guests === 1 ? "Guest" : "Guests"}
+                </span>
+                <span className="detail-value">{table.guests}</span>
+              </div>
+            </>
+          )}
 
         </div>
 

@@ -13,7 +13,10 @@ export default function NavigationButtons({
   canSendOrder,
   onPayment,
   onCancelOrder,
+  orderType = "dine_in",
 }) {
+
+  const isTakeout = orderType === "takeout";
 
   return (
     <div className="navigation-buttons">
@@ -31,7 +34,6 @@ export default function NavigationButtons({
         Send Order
       </button>
 
-
       {/* =========================
           PAYMENT
       ========================= */}
@@ -43,7 +45,7 @@ export default function NavigationButtons({
         <CreditCard size={19} />
         Payment
       </button>
-      
+
       {/* =========================
           CANCEL ORDER
       ========================= */}
@@ -54,7 +56,7 @@ export default function NavigationButtons({
       >
         <Ban size={19} />
         Cancel Order
-      </button> 
+      </button>
 
       {/* =========================
           BACK BUTTON
@@ -72,7 +74,9 @@ export default function NavigationButtons({
 
         {showCategories
           ? "Categories"
-          : "Tables"}
+          : isTakeout
+            ? "Orders"
+            : "Tables"}
       </button>
 
     </div>

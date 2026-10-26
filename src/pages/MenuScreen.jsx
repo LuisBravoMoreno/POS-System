@@ -1537,36 +1537,14 @@ const closeOrder = async () => {
         ========================= */}
 
         <NavigationButtons
-
-          showCategories={
-            Boolean(
-              selectedCategory
-            )
-          }
-
-          onCategories={
-            goBackToCategories
-          }
-
-          onTables={
-            onBack
-          }
-
-          onSendOrder={
-            sendOrder
-          }
-
-          canSendOrder={
-            canSendOrder
-          }
-
-          onPayment={
-            handlePayment
-          }
-
-          onCancelOrder={
-            cancelOrder
-          }
+          showCategories={Boolean(selectedCategory)}
+          onCategories={goBackToCategories}
+          onTables={onBack}
+          onSendOrder={sendOrder}
+          canSendOrder={canSendOrder}
+          onPayment={handlePayment}
+          onCancelOrder={cancelOrder}
+          orderType={table.orderType}
         />
         
       </main>

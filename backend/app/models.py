@@ -80,21 +80,32 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
 
-    # Restaurant associated with this order
     restaurant_id = Column(
         Integer,
         ForeignKey("restaurant_settings.id"),
         nullable=False
     )
 
+    order_type = Column(
+        String(20),
+        nullable=False,
+        default="dine_in",
+        server_default="dine_in"
+    )
+
     table_number = Column(
         Integer,
-        nullable=False
+        nullable=True
     )
 
     guest_count = Column(
         Integer,
         nullable=False
+    )
+
+    customer_name = Column(
+        String(100),
+        nullable=True
     )
 
     status = Column(
@@ -109,24 +120,9 @@ class Order(Base):
         server_default=func.now()
     )
 
-    # One order can have multiple guests
-    guests = relationship(
-        "OrderGuest",
-        back_populates="order"
-    )
-
-    # One order belongs to one restaurant
-    restaurant = relationship(
-        "RestaurantSettings",
-        back_populates="orders"
-    )
-
-    # One order can have multiple payments
-    payments = relationship(
-        "Payment",
-        back_populates="order"
-    )
-
+    guests = relationship("OrderGuest", back_populates="order")
+    restaurant = relationship("RestaurantSettings", back_populates="orders")
+    payments = relationship("Payment", back_populates="order")
 
 # =========================
 # ORDER GUEST

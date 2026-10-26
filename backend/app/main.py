@@ -106,49 +106,63 @@ def get_products_by_category(
 
     return products
 
+
 @app.post("/orders")
 def create_order(
     order_data: OrderCreate,
     db: Session = Depends(get_db),
 ):
-    restaurant_id = 1  # Residente: temporal hasta implementar autenticación multi-tenant
+    restaurant_id = 1  # Temporal hasta implementar autenticación
 
-    restaurant = db.query(RestaurantSettings).filter(
-        RestaurantSettings.id == restaurant_id
-    ).first()
-    if not restaurant:
-        raise HTTPException(status_code=404, detail="Restaurant not found.")
-
-    existing_order = (
-        db.query(Order)
-        .filter(
-            Order.restaurant_id == restaurant_id,
-            Order.table_number == order_data.table_number,
-            Order.status == "open",
-        )
+    # 1. Verificar que exista el restaurante
+    restaurant = (
+        db.query(RestaurantSettings)
+        .filter(RestaurantSettings.id == restaurant_id)
         .first()
     )
 
-    if existing_order:
+    if not restaurant:
         raise HTTPException(
-            status_code=409,
-            detail="This table already has an open order."
+            status_code=404,
+            detail="Restaurant not found."
         )
 
+    # 2. Verificar disponibilidad de mesa SOLO para Dine-in
+    if order_data.order_type == "dine_in":
+
+        existing_order = (
+            db.query(Order)
+            .filter(
+                Order.restaurant_id == restaurant_id,
+                Order.order_type == "dine_in",
+                Order.table_number == order_data.table_number,
+                Order.status == "open",
+            )
+            .first()
+        )
+
+        if existing_order:
+            raise HTTPException(
+                status_code=409,
+                detail="This table already has an open order."
+            )
+
+    # 3. Crear orden Dine-in o Takeout
     order = Order(
         restaurant_id=restaurant_id,
+        order_type=order_data.order_type,
         table_number=order_data.table_number,
         guest_count=order_data.guest_count,
+        customer_name=order_data.customer_name,
         status="open",
     )
 
     db.add(order)
     db.flush()
 
-    for guest_number in range(
-        1,
-        order_data.guest_count + 1
-    ):
+    # 4. Crear los invitados de la orden
+    for guest_number in range(1, order_data.guest_count + 1):
+
         guest = OrderGuest(
             order_id=order.id,
             guest_number=guest_number,
@@ -156,6 +170,7 @@ def create_order(
 
         db.add(guest)
 
+    # 5. Guardar orden e invitados
     db.commit()
     db.refresh(order)
 
@@ -175,6 +190,126 @@ def get_open_orders(
 
     return open_orders
 
+
+@app.get("/orders/history")
+def get_orders_history(db: Session = Depends(get_db)):
+    restaurant_id = 1
+    CENT = Decimal("0.01")
+
+    # 1. Obtener todas las órdenes del restaurante
+    orders = (
+        db.query(Order)
+        .filter(
+            Order.restaurant_id == restaurant_id,
+            Order.status != "cancelled"
+        )
+        .order_by(Order.id.desc())
+    .   all()
+    )
+
+    # 2. Obtener configuración de impuestos y propina
+    settings = (
+        db.query(RestaurantSettings)
+        .filter(RestaurantSettings.id == restaurant_id)
+        .first()
+    )
+
+    if not settings:
+        raise HTTPException(
+            status_code=404,
+            detail="Restaurant settings not found."
+        )
+
+    # 3. Obtener los productos enviados de todas las órdenes
+    sent_items = (
+        db.query(OrderGuest.order_id, OrderItem)
+        .join(OrderItem, OrderItem.guest_id == OrderGuest.id)
+        .join(Order, Order.id == OrderGuest.order_id)
+        .filter(
+            Order.restaurant_id == restaurant_id,
+            OrderItem.status == "sent"
+        )
+        .all()
+    )
+
+    items_by_order = {}
+
+    for order_id, item in sent_items:
+        items_by_order.setdefault(order_id, []).append(item)
+
+    # 4. Obtener los pagos completados
+    payments = (
+        db.query(Payment)
+        .join(Order, Order.id == Payment.order_id)
+        .filter(
+            Order.restaurant_id == restaurant_id,
+            Payment.status == "completed"
+        )
+        .all()
+    )
+
+    payments_by_order = {}
+
+    for payment in payments:
+        payments_by_order.setdefault(
+            payment.order_id, Decimal("0.00")
+        )
+        payments_by_order[payment.order_id] += Decimal(
+            str(payment.total_amount)
+        )
+
+    # 5. Construir el historial
+    history = []
+
+    for order in orders:
+        items = items_by_order.get(order.id, [])
+
+        totals = calculate_total(
+            items,
+            tax_rate=settings.tax_rate,
+            tip_rate=settings.tip_rate
+        )
+
+        order_total = Decimal(
+            str(totals["total"])
+        ).quantize(CENT)
+
+        paid_amount = payments_by_order.get(
+            order.id, Decimal("0.00")
+        ).quantize(CENT)
+
+        remaining_balance = (
+            order_total - paid_amount
+        ).quantize(CENT)
+
+        # Una orden cancelada no es una orden pagada.
+        # Una orden vacía tampoco es una orden pagada.
+        if order.status == "cancelled":
+            payment_status = "cancelled"
+        elif order_total <= 0:
+            payment_status = "unpaid"
+        elif remaining_balance > 0:
+            payment_status = "unpaid"
+        else:
+            payment_status = "paid"
+
+        history.append({
+            "id": order.id,
+            "order_type": order.order_type,
+            "customer_name": order.customer_name,
+            "table_number": order.table_number,
+            "guest_count": order.guest_count,
+            "status": order.status,
+            "subtotal": totals["subtotal"],
+            "tax": totals["tax"],
+            "tip": totals["tip"],
+            "total": order_total,
+            "paid_amount": paid_amount,
+            "remaining_balance": remaining_balance,
+            "payment_status": payment_status
+        })
+
+    return history
 
 # Obtener la orden con subtotal, tax, tip y total
 @app.get("/orders/{order_id}")

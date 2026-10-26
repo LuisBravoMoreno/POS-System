@@ -1,3 +1,5 @@
+# Local database credentials
+analytics/database.py
 # Logs
 logs
 *.log
