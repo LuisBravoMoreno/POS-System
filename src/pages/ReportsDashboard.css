@@ -1,0 +1,30 @@
+.reports-dashboard {
+  padding: 32px;
+  min-height: 100%;
+  background-color: #f5f7fb;
+  box-sizing: border-box;
+}
+
+.reports-header h1 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px;
+}
+
+.reports-header p {
+  color: #64748b;
+  font-size: 14px;
+}
+
+.reports-content {
+  margin-top: 28px;
+  padding: 32px;
+  background: white;
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.reports-content h2 {
+  color: #0f172a;
+}

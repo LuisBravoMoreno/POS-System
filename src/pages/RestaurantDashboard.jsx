@@ -4,6 +4,7 @@ import "./RestaurantDashboard.css";
 import CreateOrder from "./CreateOrder";
 import TablesView from "./TablesView";
 import OrdersHistory from "./OrdersHistory";
+import ReportsDashboard from "./ReportsDashboard";
 
 import Sidebar from "../components/Sidebar";
 import GuestModal from "../components/GuestModal";
@@ -144,6 +145,12 @@ export default function RestaurantDashboard() {
 
     if (section === "orders-history" || section === "order-history" || section === "ordersHistory" || section === "orderHistory") {
       setView("orders-history");
+      setTakeoutModalOpen(false);
+      setSelectedTable(null);
+    }
+    // REPORTS NAVIGATION
+    if (section === "reports") {
+      setView("reports");
       setTakeoutModalOpen(false);
       setSelectedTable(null);
     }
@@ -535,6 +542,10 @@ export default function RestaurantDashboard() {
 
         {/* TAKEOUT uses the shared MenuScreen after creation. */}
 
+        {/* REPORTS */}
+        {view === "reports" && (
+          <ReportsDashboard />
+        )}
       </main>
 
       {/* =========================
