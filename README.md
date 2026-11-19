@@ -216,22 +216,6 @@ These techniques transform transactional data into measurable business indicator
 
 ---
 
-## Screenshots
-
-### Table Management
-
-![Table Management](screenshots/tables-dashboard.png)
-
-### Order & Menu Management
-
-![Order and Menu Management](screenshots/menu-screen.png)
-
-### Order Details
-
-![Order Details](screenshots/order-management.png)
-
----
-
 ## Project Status
 
 🚧 **Currently under active development.**
