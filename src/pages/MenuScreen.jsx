@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import "./MenuScreen.css";
-
+import usePendingItems from "../hooks/usePendingItems";
 import PaymentSuccess from "../components/payment/PaymentSuccess";
 import MenuSidebar from "../components/menu/MenuSidebar";
 import CategoryGrid from "../components/menu/CategoryGrid";
@@ -422,82 +422,17 @@ const [kitchenReceiptData, setKitchenReceiptData] =
 
   };
 
+  // =========================
+  // PENDING ITEMS HOOK
+  // =========================
 
-  /* =========================
-     REMOVE PENDING QUANTITY
-  ========================= */
-
-  /*
-    Un pending todavía NO existe
-    en PostgreSQL.
-
-    Por eso simplemente quitamos
-    unidades del state de React.
-  */
-
-  const removePendingQuantity = (
-    guestNumber,
-    productId,
-    quantityToRemove
-  ) => {
-
-    setPendingGuestOrders(
-      (previousOrders) => {
-
-        const guestItems =
-          previousOrders[
-            guestNumber
-          ] || [];
-
-
-        let remainingToRemove =
-          quantityToRemove;
-
-
-        const updatedItems = [];
-
-
-        guestItems.forEach(
-          (product) => {
-
-            if (
-              product.id ===
-                productId &&
-              remainingToRemove > 0
-            ) {
-
-              remainingToRemove -=
-                1;
-
-              return;
-
-            }
-
-
-            updatedItems.push(
-              product
-            );
-
-          }
-        );
-
-
-        return {
-
-          ...previousOrders,
-
-          [guestNumber]:
-            updatedItems,
-
-        };
-
-      }
-    );
-
-
-    closeItemModal();
-
-  };
+  const {
+    removePendingQuantity,
+    movePendingQuantity,
+  } = usePendingItems({
+    setPendingGuestOrders,
+    closeItemModal,
+  });
 
 
   /* =========================
@@ -596,110 +531,6 @@ const [kitchenReceiptData, setKitchenReceiptData] =
     }
 
   };
-
-
-  /* =========================
-     MOVE PENDING QUANTITY
-  ========================= */
-
-  /*
-    Un producto PENDING todavía
-    no existe en PostgreSQL.
-
-    Por eso el movimiento ocurre
-    solamente en React.
-  */
-
-  const movePendingQuantity = (
-    fromGuest,
-    toGuest,
-    productId,
-    quantityToMove
-  ) => {
-
-    if (
-      fromGuest === toGuest
-    ) {
-      return;
-    }
-
-
-    setPendingGuestOrders(
-      (previousOrders) => {
-
-        const sourceItems =
-          previousOrders[
-            fromGuest
-          ] || [];
-
-
-        const destinationItems =
-          previousOrders[
-            toGuest
-          ] || [];
-
-
-        let remainingToMove =
-          quantityToMove;
-
-
-        const updatedSource =
-          [];
-
-        const itemsToMove =
-          [];
-
-
-        sourceItems.forEach(
-          (product) => {
-
-            if (
-              product.id ===
-                productId &&
-              remainingToMove > 0
-            ) {
-
-              itemsToMove.push(
-                product
-              );
-
-              remainingToMove -=
-                1;
-
-            } else {
-
-              updatedSource.push(
-                product
-              );
-
-            }
-
-          }
-        );
-
-
-        return {
-
-          ...previousOrders,
-
-          [fromGuest]:
-            updatedSource,
-
-          [toGuest]: [
-            ...destinationItems,
-            ...itemsToMove,
-          ],
-
-        };
-
-      }
-    );
-
-
-    closeItemModal();
-
-  };
-
 
   /* =========================
      MOVE SENT ITEM
