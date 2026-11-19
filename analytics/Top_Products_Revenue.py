@@ -13,7 +13,7 @@ INNER JOIN order_items as oi
 ON p. id=oi.product_id
 WHERE oi.status='sent'
 GROUP BY p.id,p.name
-ORDER BY total_revenue DESC;
+ORDER BY total_revenue DESC LIMIT 10;
 """
 
 with engine.connect() as connection:
