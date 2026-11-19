@@ -1,17 +1,14 @@
 import { useEffect, useState } from "react";
 import "./MenuScreen.css";
-
+import usePendingItems from "../hooks/usePendingItems";
 import PaymentSuccess from "../components/payment/PaymentSuccess";
 import MenuSidebar from "../components/menu/MenuSidebar";
 import CategoryGrid from "../components/menu/CategoryGrid";
 import GuestSelector from "../components/menu/GuestSelector";
 import ProductGrid from "../components/menu/ProductGrid";
 import NavigationButtons from "../components/menu/NavigationButtons";
-
-import ItemActionsModal from "../components/menu/ItemActionsModal";
-import RemoveItemModal from "../components/menu/RemoveItemModal";
-import MoveItemModal from "../components/menu/MoveItemModal";
-import ItemDetailsModal from "../components/menu/ItemDetailsModals";
+import { getOrderById, voidOrderItem, moveOrderItem } from "../services/orderService";
+import ItemModals from "../components/menu/ItemModals";
 import PaymentModal from "../components/payment/PaymentModal";
 import KitchenReceipt from "../components/receipts/KitchenReceipt";
 
@@ -173,39 +170,24 @@ const [kitchenReceiptData, setKitchenReceiptData] =
 
   const reloadOrder = async () => {
 
-    const response = await fetch(
-      `${API_URL}/orders/${table.orderId}`
+    // Get order data from FastAPI service
+    const orderData = await getOrderById(
+      table.orderId
     );
 
+    // Transform API data into React UI structure
+    const loadedGuestOrders = buildGuestOrders(
+      orderData
+    );
 
-    if (!response.ok) {
-
-      throw new Error(
-        `HTTP error: ${response.status}`
-      );
-
-    }
-
-
-    const orderData =
-      await response.json();
-
-
-    const loadedGuestOrders =
-      buildGuestOrders(
-        orderData
-      );
-
-
+   // Update React state
     setGuestOrders(
       loadedGuestOrders
     );
 
-
     return orderData;
 
   };
-
 
   /* =========================
      LOAD EXISTING ORDER
@@ -425,97 +407,22 @@ const [kitchenReceiptData, setKitchenReceiptData] =
 
   };
 
+  // =========================
+  // PENDING ITEMS HOOK
+  // =========================
 
-  /* =========================
-     REMOVE PENDING QUANTITY
-  ========================= */
-
-  /*
-    Un pending todavía NO existe
-    en PostgreSQL.
-
-    Por eso simplemente quitamos
-    unidades del state de React.
-  */
-
-  const removePendingQuantity = (
-    guestNumber,
-    productId,
-    quantityToRemove
-  ) => {
-
-    setPendingGuestOrders(
-      (previousOrders) => {
-
-        const guestItems =
-          previousOrders[
-            guestNumber
-          ] || [];
-
-
-        let remainingToRemove =
-          quantityToRemove;
-
-
-        const updatedItems = [];
-
-
-        guestItems.forEach(
-          (product) => {
-
-            if (
-              product.id ===
-                productId &&
-              remainingToRemove > 0
-            ) {
-
-              remainingToRemove -=
-                1;
-
-              return;
-
-            }
-
-
-            updatedItems.push(
-              product
-            );
-
-          }
-        );
-
-
-        return {
-
-          ...previousOrders,
-
-          [guestNumber]:
-            updatedItems,
-
-        };
-
-      }
-    );
-
-
-    closeItemModal();
-
-  };
+  const {
+    removePendingQuantity,
+    movePendingQuantity,
+  } = usePendingItems({
+    setPendingGuestOrders,
+    closeItemModal,
+  });
 
 
   /* =========================
      VOID SENT ITEM
   ========================= */
-
-  /*
-    Un producto SENT ya existe
-    en PostgreSQL.
-
-    NO lo borramos directamente.
-
-    Utilizamos nuestro endpoint
-    de VOID para mantener historial.
-  */
 
   const voidSentItem = async (
     itemId,
@@ -526,62 +433,23 @@ const [kitchenReceiptData, setKitchenReceiptData] =
 
       setError(null);
 
-
-      const response = await fetch(
-        `${API_URL}/orders/${table.orderId}/items/${itemId}/void`,
-        {
-          method: "PATCH",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            quantity:
-              quantity,
-          }),
-        }
+      // Send PATCH request through API service
+      const voidResult = await voidOrderItem(
+        table.orderId,
+        itemId,
+        quantity
       );
-
-
-      if (!response.ok) {
-
-        const errorData =
-          await response.json();
-
-
-        throw new Error(
-          errorData.detail ||
-          `HTTP error: ${response.status}`
-        );
-
-      }
-
-
-      const voidResult =
-        await response.json();
-
 
       console.log(
         "Item voided successfully:",
         voidResult
       );
 
-
-      /*
-        No modificamos manualmente
-        guestOrders.
-
-        Volvemos a PostgreSQL para
-        obtener la orden actualizada.
-      */
-
+      // Reload updated order from PostgreSQL
       await reloadOrder();
 
-
+      // Close item modal
       closeItemModal();
-
 
     } catch (error) {
 
@@ -590,119 +458,13 @@ const [kitchenReceiptData, setKitchenReceiptData] =
         error
       );
 
-
       setError(
         error.message ||
         "Could not remove item."
       );
 
     }
-
   };
-
-
-  /* =========================
-     MOVE PENDING QUANTITY
-  ========================= */
-
-  /*
-    Un producto PENDING todavía
-    no existe en PostgreSQL.
-
-    Por eso el movimiento ocurre
-    solamente en React.
-  */
-
-  const movePendingQuantity = (
-    fromGuest,
-    toGuest,
-    productId,
-    quantityToMove
-  ) => {
-
-    if (
-      fromGuest === toGuest
-    ) {
-      return;
-    }
-
-
-    setPendingGuestOrders(
-      (previousOrders) => {
-
-        const sourceItems =
-          previousOrders[
-            fromGuest
-          ] || [];
-
-
-        const destinationItems =
-          previousOrders[
-            toGuest
-          ] || [];
-
-
-        let remainingToMove =
-          quantityToMove;
-
-
-        const updatedSource =
-          [];
-
-        const itemsToMove =
-          [];
-
-
-        sourceItems.forEach(
-          (product) => {
-
-            if (
-              product.id ===
-                productId &&
-              remainingToMove > 0
-            ) {
-
-              itemsToMove.push(
-                product
-              );
-
-              remainingToMove -=
-                1;
-
-            } else {
-
-              updatedSource.push(
-                product
-              );
-
-            }
-
-          }
-        );
-
-
-        return {
-
-          ...previousOrders,
-
-          [fromGuest]:
-            updatedSource,
-
-          [toGuest]: [
-            ...destinationItems,
-            ...itemsToMove,
-          ],
-
-        };
-
-      }
-    );
-
-
-    closeItemModal();
-
-  };
-
 
   /* =========================
      MOVE SENT ITEM
@@ -732,65 +494,26 @@ const [kitchenReceiptData, setKitchenReceiptData] =
 
       setError(null);
 
-
-      const response = await fetch(
-        `${API_URL}/orders/${table.orderId}/items/${itemId}/move`,
-        {
-          method: "PATCH",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            guest_number:
-              destinationGuest,
-
-            quantity:
-              quantity,
-          }),
-        }
+      // Send PATCH request through API service
+      const moveResult = await moveOrderItem(
+        table.orderId,
+        itemId,
+        destinationGuest,
+        quantity
       );
-
-
-      if (!response.ok) {
-
-        const errorData =
-          await response.json();
-
-
-        throw new Error(
-          errorData.detail ||
-          `HTTP error: ${response.status}`
-        );
-
-      }
-
-
-      const moveResult =
-        await response.json();
-
 
       console.log(
         "Item moved successfully:",
         moveResult
       );
 
-
       /*
-        No modificamos guestOrders
-        manualmente.
-
-        PostgreSQL continúa siendo
-        nuestra fuente de verdad.
+        PostgreSQL remains our
+        source of truth.
       */
-
       await reloadOrder();
 
-
       closeItemModal();
-
 
     } catch (error) {
 
@@ -799,16 +522,12 @@ const [kitchenReceiptData, setKitchenReceiptData] =
         error
       );
 
-
       setError(
         error.message ||
         "Could not move item."
       );
-
-    }
-
+   }
   };
-
 
   /* =========================
      SEND ORDER
@@ -1550,222 +1269,21 @@ const closeOrder = async () => {
       </main>
 
 
-      {/* =========================
-          ITEM ACTIONS
-      ========================= */}
+        {/* =========================
+            ITEM MODALS
+          ========================= */}
 
-      {activeItemModal ===
-        "actions" &&
-        selectedCheckItem && (
-
-          <ItemActionsModal
-
-            item={
-              selectedCheckItem
-            }
-
-            onRemove={() =>
-              setActiveItemModal(
-                "remove"
-              )
-            }
-
-            /*
-              Tanto PENDING como SENT
-              pueden abrir MOVE.
-
-              La diferencia se decide
-              posteriormente en onConfirm.
-            */
-            onMove={() =>
-              setActiveItemModal(
-                "move"
-              )
-            }
-
-            onDetails={() =>
-              setActiveItemModal(
-                "details"
-              )
-            }
-
-            onClose={
-              closeItemModal
-            }
-
-          />
-
-        )}
-
-
-      {/* =========================
-          REMOVE
-      ========================= */}
-
-      {activeItemModal ===
-        "remove" &&
-        selectedCheckItem && (
-
-          <RemoveItemModal
-
-            item={
-              selectedCheckItem
-            }
-
-            onBack={() =>
-              setActiveItemModal(
-                "actions"
-              )
-            }
-
-            onConfirm={
-              (quantity) => {
-
-                /*
-                  PENDING:
-                  solamente React.
-                */
-
-                if (
-                  selectedCheckItem.status ===
-                  "pending"
-                ) {
-
-                  removePendingQuantity(
-                    selectedCheckItem.guestNumber,
-                    selectedCheckItem.productId,
-                    quantity
-                  );
-
-                  return;
-
-                }
-
-
-                /*
-                  SENT:
-                  PostgreSQL / VOID.
-                */
-
-                if (
-                  selectedCheckItem.status ===
-                  "sent"
-                ) {
-
-                  voidSentItem(
-                    selectedCheckItem.itemId,
-                    quantity
-                  );
-
-                }
-
-              }
-            }
-
-          />
-
-        )}
-
-
-      {/* =========================
-          MOVE
-      ========================= */}
-
-      {activeItemModal ===
-        "move" &&
-        selectedCheckItem && (
-
-          <MoveItemModal
-
-            item={
-              selectedCheckItem
-            }
-
-            guestCount={
-              table.guests
-            }
-
-            onBack={() =>
-              setActiveItemModal(
-                "actions"
-              )
-            }
-
-            onConfirm={
-              (
-                destinationGuest,
-                quantity
-              ) => {
-
-                /*
-                  PENDING:
-                  solamente React.
-                */
-
-                if (
-                  selectedCheckItem.status ===
-                  "pending"
-                ) {
-
-                  movePendingQuantity(
-                    selectedCheckItem.guestNumber,
-                    destinationGuest,
-                    selectedCheckItem.productId,
-                    quantity
-                  );
-
-                  return;
-
-                }
-
-
-                /*
-                  SENT:
-                  PostgreSQL.
-                */
-
-                if (
-                  selectedCheckItem.status ===
-                  "sent"
-                ) {
-
-                  moveSentItem(
-                    selectedCheckItem.itemId,
-                    destinationGuest,
-                    quantity
-                  );
-
-                }
-
-              }
-            }
-
-          />
-
-        )}
-
-
-      {/* =========================
-          DETAILS
-      ========================= */}
-
-      {activeItemModal ===
-        "details" &&
-        selectedCheckItem && (
-
-          <ItemDetailsModal
-
-            item={
-              selectedCheckItem
-            }
-
-            onClose={
-              closeItemModal
-            }
-
-          />
-
-        )}
+        <ItemModals
+          activeItemModal={activeItemModal}
+          selectedCheckItem={selectedCheckItem}
+          guestCount={table.guests}
+          setActiveItemModal={setActiveItemModal}
+          closeItemModal={closeItemModal}
+          removePendingQuantity={removePendingQuantity}
+          voidSentItem={voidSentItem}
+          movePendingQuantity={movePendingQuantity}
+          moveSentItem={moveSentItem}
+        />
 
         {/* PAYMENT MODAL */}
         {showPaymentModal && paymentOrderData && (
