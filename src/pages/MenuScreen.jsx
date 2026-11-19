@@ -8,10 +8,7 @@ import GuestSelector from "../components/menu/GuestSelector";
 import ProductGrid from "../components/menu/ProductGrid";
 import NavigationButtons from "../components/menu/NavigationButtons";
 
-import ItemActionsModal from "../components/menu/ItemActionsModal";
-import RemoveItemModal from "../components/menu/RemoveItemModal";
-import MoveItemModal from "../components/menu/MoveItemModal";
-import ItemDetailsModal from "../components/menu/ItemDetailsModals";
+import ItemModals from "../components/menu/ItemModals";
 import PaymentModal from "../components/payment/PaymentModal";
 import KitchenReceipt from "../components/receipts/KitchenReceipt";
 
@@ -1550,222 +1547,21 @@ const closeOrder = async () => {
       </main>
 
 
-      {/* =========================
-          ITEM ACTIONS
-      ========================= */}
+        {/* =========================
+            ITEM MODALS
+          ========================= */}
 
-      {activeItemModal ===
-        "actions" &&
-        selectedCheckItem && (
-
-          <ItemActionsModal
-
-            item={
-              selectedCheckItem
-            }
-
-            onRemove={() =>
-              setActiveItemModal(
-                "remove"
-              )
-            }
-
-            /*
-              Tanto PENDING como SENT
-              pueden abrir MOVE.
-
-              La diferencia se decide
-              posteriormente en onConfirm.
-            */
-            onMove={() =>
-              setActiveItemModal(
-                "move"
-              )
-            }
-
-            onDetails={() =>
-              setActiveItemModal(
-                "details"
-              )
-            }
-
-            onClose={
-              closeItemModal
-            }
-
-          />
-
-        )}
-
-
-      {/* =========================
-          REMOVE
-      ========================= */}
-
-      {activeItemModal ===
-        "remove" &&
-        selectedCheckItem && (
-
-          <RemoveItemModal
-
-            item={
-              selectedCheckItem
-            }
-
-            onBack={() =>
-              setActiveItemModal(
-                "actions"
-              )
-            }
-
-            onConfirm={
-              (quantity) => {
-
-                /*
-                  PENDING:
-                  solamente React.
-                */
-
-                if (
-                  selectedCheckItem.status ===
-                  "pending"
-                ) {
-
-                  removePendingQuantity(
-                    selectedCheckItem.guestNumber,
-                    selectedCheckItem.productId,
-                    quantity
-                  );
-
-                  return;
-
-                }
-
-
-                /*
-                  SENT:
-                  PostgreSQL / VOID.
-                */
-
-                if (
-                  selectedCheckItem.status ===
-                  "sent"
-                ) {
-
-                  voidSentItem(
-                    selectedCheckItem.itemId,
-                    quantity
-                  );
-
-                }
-
-              }
-            }
-
-          />
-
-        )}
-
-
-      {/* =========================
-          MOVE
-      ========================= */}
-
-      {activeItemModal ===
-        "move" &&
-        selectedCheckItem && (
-
-          <MoveItemModal
-
-            item={
-              selectedCheckItem
-            }
-
-            guestCount={
-              table.guests
-            }
-
-            onBack={() =>
-              setActiveItemModal(
-                "actions"
-              )
-            }
-
-            onConfirm={
-              (
-                destinationGuest,
-                quantity
-              ) => {
-
-                /*
-                  PENDING:
-                  solamente React.
-                */
-
-                if (
-                  selectedCheckItem.status ===
-                  "pending"
-                ) {
-
-                  movePendingQuantity(
-                    selectedCheckItem.guestNumber,
-                    destinationGuest,
-                    selectedCheckItem.productId,
-                    quantity
-                  );
-
-                  return;
-
-                }
-
-
-                /*
-                  SENT:
-                  PostgreSQL.
-                */
-
-                if (
-                  selectedCheckItem.status ===
-                  "sent"
-                ) {
-
-                  moveSentItem(
-                    selectedCheckItem.itemId,
-                    destinationGuest,
-                    quantity
-                  );
-
-                }
-
-              }
-            }
-
-          />
-
-        )}
-
-
-      {/* =========================
-          DETAILS
-      ========================= */}
-
-      {activeItemModal ===
-        "details" &&
-        selectedCheckItem && (
-
-          <ItemDetailsModal
-
-            item={
-              selectedCheckItem
-            }
-
-            onClose={
-              closeItemModal
-            }
-
-          />
-
-        )}
+        <ItemModals
+          activeItemModal={activeItemModal}
+          selectedCheckItem={selectedCheckItem}
+          guestCount={table.guests}
+          setActiveItemModal={setActiveItemModal}
+          closeItemModal={closeItemModal}
+          removePendingQuantity={removePendingQuantity}
+          voidSentItem={voidSentItem}
+          movePendingQuantity={movePendingQuantity}
+          moveSentItem={moveSentItem}
+        />
 
         {/* PAYMENT MODAL */}
         {showPaymentModal && paymentOrderData && (
