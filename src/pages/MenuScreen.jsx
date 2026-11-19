@@ -7,7 +7,7 @@ import CategoryGrid from "../components/menu/CategoryGrid";
 import GuestSelector from "../components/menu/GuestSelector";
 import ProductGrid from "../components/menu/ProductGrid";
 import NavigationButtons from "../components/menu/NavigationButtons";
-
+import { getOrderById, voidOrderItem, moveOrderItem } from "../services/orderService";
 import ItemModals from "../components/menu/ItemModals";
 import PaymentModal from "../components/payment/PaymentModal";
 import KitchenReceipt from "../components/receipts/KitchenReceipt";
@@ -170,39 +170,24 @@ const [kitchenReceiptData, setKitchenReceiptData] =
 
   const reloadOrder = async () => {
 
-    const response = await fetch(
-      `${API_URL}/orders/${table.orderId}`
+    // Get order data from FastAPI service
+    const orderData = await getOrderById(
+      table.orderId
     );
 
+    // Transform API data into React UI structure
+    const loadedGuestOrders = buildGuestOrders(
+      orderData
+    );
 
-    if (!response.ok) {
-
-      throw new Error(
-        `HTTP error: ${response.status}`
-      );
-
-    }
-
-
-    const orderData =
-      await response.json();
-
-
-    const loadedGuestOrders =
-      buildGuestOrders(
-        orderData
-      );
-
-
+   // Update React state
     setGuestOrders(
       loadedGuestOrders
     );
 
-
     return orderData;
 
   };
-
 
   /* =========================
      LOAD EXISTING ORDER
@@ -439,16 +424,6 @@ const [kitchenReceiptData, setKitchenReceiptData] =
      VOID SENT ITEM
   ========================= */
 
-  /*
-    Un producto SENT ya existe
-    en PostgreSQL.
-
-    NO lo borramos directamente.
-
-    Utilizamos nuestro endpoint
-    de VOID para mantener historial.
-  */
-
   const voidSentItem = async (
     itemId,
     quantity
@@ -458,62 +433,23 @@ const [kitchenReceiptData, setKitchenReceiptData] =
 
       setError(null);
 
-
-      const response = await fetch(
-        `${API_URL}/orders/${table.orderId}/items/${itemId}/void`,
-        {
-          method: "PATCH",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            quantity:
-              quantity,
-          }),
-        }
+      // Send PATCH request through API service
+      const voidResult = await voidOrderItem(
+        table.orderId,
+        itemId,
+        quantity
       );
-
-
-      if (!response.ok) {
-
-        const errorData =
-          await response.json();
-
-
-        throw new Error(
-          errorData.detail ||
-          `HTTP error: ${response.status}`
-        );
-
-      }
-
-
-      const voidResult =
-        await response.json();
-
 
       console.log(
         "Item voided successfully:",
         voidResult
       );
 
-
-      /*
-        No modificamos manualmente
-        guestOrders.
-
-        Volvemos a PostgreSQL para
-        obtener la orden actualizada.
-      */
-
+      // Reload updated order from PostgreSQL
       await reloadOrder();
 
-
+      // Close item modal
       closeItemModal();
-
 
     } catch (error) {
 
@@ -522,14 +458,12 @@ const [kitchenReceiptData, setKitchenReceiptData] =
         error
       );
 
-
       setError(
         error.message ||
         "Could not remove item."
       );
 
     }
-
   };
 
   /* =========================
@@ -560,65 +494,26 @@ const [kitchenReceiptData, setKitchenReceiptData] =
 
       setError(null);
 
-
-      const response = await fetch(
-        `${API_URL}/orders/${table.orderId}/items/${itemId}/move`,
-        {
-          method: "PATCH",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            guest_number:
-              destinationGuest,
-
-            quantity:
-              quantity,
-          }),
-        }
+      // Send PATCH request through API service
+      const moveResult = await moveOrderItem(
+        table.orderId,
+        itemId,
+        destinationGuest,
+        quantity
       );
-
-
-      if (!response.ok) {
-
-        const errorData =
-          await response.json();
-
-
-        throw new Error(
-          errorData.detail ||
-          `HTTP error: ${response.status}`
-        );
-
-      }
-
-
-      const moveResult =
-        await response.json();
-
 
       console.log(
         "Item moved successfully:",
         moveResult
       );
 
-
       /*
-        No modificamos guestOrders
-        manualmente.
-
-        PostgreSQL continúa siendo
-        nuestra fuente de verdad.
+        PostgreSQL remains our
+        source of truth.
       */
-
       await reloadOrder();
 
-
       closeItemModal();
-
 
     } catch (error) {
 
@@ -627,16 +522,12 @@ const [kitchenReceiptData, setKitchenReceiptData] =
         error
       );
 
-
       setError(
         error.message ||
         "Could not move item."
       );
-
-    }
-
+   }
   };
-
 
   /* =========================
      SEND ORDER
