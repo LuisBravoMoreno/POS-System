@@ -1,8 +1,30 @@
+/* =========================
+   REPORTS DASHBOARD
+========================= */
+
 .reports-dashboard {
   padding: 32px;
   min-height: 100%;
   background-color: #f5f7fb;
   box-sizing: border-box;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.reports-header {
+  text-align: center;
+}
+
+/* L-ED SOFTWARE BRAND COLORS */
+
+.reports-title-dark {
+  color: #0b1533;
+}
+
+.reports-title-blue {
+  color: #3268f0;
 }
 
 .reports-header h1 {
@@ -15,16 +37,369 @@
 .reports-header p {
   color: #64748b;
   font-size: 14px;
+  margin: 0;
 }
 
+/* =========================
+   COMPACT KPI CARDS
+========================= */
+
+.reports-kpis {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 24px 0;
+  width: 100%;
+}
+
+.reports-kpi-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 16px 20px;
+  text-align: left;
+  box-sizing: border-box;
+  min-width: 0;
+}
+
+.reports-kpi-card .kpi-label {
+  display: block;
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reports-kpi-card h2 {
+  color: #0f172a;
+  font-size: 25px;
+  font-weight: 700;
+  margin: 6px 0;
+}
+
+.reports-kpi-card p {
+  color: #64748b;
+  font-size: 11px;
+  margin: 0;
+}
+
+/* =========================
+   CHARTS GRID
+========================= */
+
+.reports-charts-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
+  align-items: stretch;
+}
+
+/* =========================
+   CHART CARDS
+========================= */
+
 .reports-content {
-  margin-top: 28px;
-  padding: 32px;
-  background: white;
+  margin-top: 16px;
+  padding: 20px;
+  background: #ffffff;
   border-radius: 14px;
   border: 1px solid #e2e8f0;
+  box-sizing: border-box;
+  min-width: 0;
 }
 
 .reports-content h2 {
   color: #0f172a;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0 0 16px;
+  text-align: center;
+}
+
+/* =========================
+   DAILY REVENUE CHART
+========================= */
+
+.revenue-chart {
+  width: 100%;
+  height: 240px;
+  min-height: 0;
+  min-width: 0;
+  margin-top: 12px;
+}
+
+/* =========================
+   TOP PRODUCTS CHART
+========================= */
+
+.reports-charts-grid .reports-content {
+  min-width: 0;
+}
+
+/* =========================
+   RESPONSIVE DESIGN
+========================= */
+
+@media (max-width: 1100px) {
+  .reports-charts-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 900px) {
+  .reports-kpis {
+    grid-template-columns: 1fr;
+  }
+
+  .reports-dashboard {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 600px) {
+  .reports-dashboard {
+    padding: 12px;
+  }
+
+  .reports-content {
+    padding: 14px;
+  }
+
+  .reports-header h1 {
+    font-size: 23px;
+  }
+
+  .reports-content h2 {
+    font-size: 18px;
+  }
+}
+
+/* =========================
+   TOP 5 SELLING PRODUCTS
+========================= */
+
+.top-products-chart {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  width: 100%;
+  height: 260px;
+  gap: 12px;
+}
+
+.top-product-item {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  width: 100%;
+}
+
+.top-product-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+
+.top-product-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: #334155;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+
+.top-product-quantity {
+  font-size: 13px;
+  font-weight: 700;
+  color: #0f172a;
+  flex-shrink: 0;
+}
+
+.top-product-track {
+  width: 100%;
+  height: 12px;
+  min-height: 12px;
+  background-color: #e9eff8;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.top-product-bar {
+  height: 100%;
+  background-color: #2563eb;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+}
+
+
+/* =========================
+   SECONDARY REPORTS GRID
+========================= */
+
+.reports-secondary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.reports-secondary-grid .reports-content {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .reports-secondary-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   SALES SUMMARY
+========================= */
+
+.sales-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 12px 4px;
+}
+
+.sales-summary-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 15px 18px;
+  background: #f5f7fb;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+}
+
+.sales-summary-label {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.sales-summary-value {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0b1533;
+}
+
+.sales-summary-row.blue {
+  --accent: #3268f0;
+  --soft-bg: #eff6ff;
+}
+
+.sales-summary-row.green {
+  --accent: #16a34a;
+  --soft-bg: #f0fdf4;
+}
+
+.sales-summary-row.purple {
+  --accent: #7c3aed;
+  --soft-bg: #f5f3ff;
+}
+
+.sales-summary-row.navy {
+  --accent: #0b1533;
+  --soft-bg: #f1f5f9;
+}
+
+.sales-summary-row {
+  background: var(--soft-bg);
+  border-left: 4px solid var(--accent);
+}
+
+.sales-summary-value {
+  color: var(--accent);
+}
+
+/* =========================
+   DATE FILTERS
+========================= */
+
+.reports-filters {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin: 22px 0;
+}
+
+.reports-filter-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+.reports-filter-btn {
+  padding: 10px 18px;
+  border: 1px solid #dbe3ef;
+  border-radius: 9px;
+  background: #ffffff;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.reports-filter-btn:hover {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.reports-filter-btn.active {
+  background: #3268f0;
+  border-color: #3268f0;
+  color: #ffffff;
+}
+
+.reports-custom-range {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 16px;
+}
+
+.reports-custom-range label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.reports-custom-range input {
+  padding: 9px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #0f172a;
+  font: inherit;
+}
+
+.reports-filter-message {
+  text-align: center;
+  color: #b45309;
+  font-size: 13px;
+}
+
+.reports-error {
+  text-align: center;
+  color: #dc2626;
+  font-size: 13px;
+}
+
+@media (max-width: 600px) {
+  .reports-filter-btn {
+    padding: 9px 12px;
+    font-size: 12px;
+  }
 }

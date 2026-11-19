@@ -2,6 +2,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from sqlalchemy import text
 from app.database import Base, engine
 from app import models
+from app.routers import reports
 
 from sqlalchemy.orm import Session
 from decimal import Decimal
@@ -39,6 +40,13 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# -------------------------
+# Reports Router
+# -------------------------
+
+app.include_router(reports.router)
+
 
 # -------------------------
 # Helper functions
